@@ -49,9 +49,11 @@ document.addEventListener("DOMContentLoaded", () => {
       postCard.classList.add("post-item"); 
       postCard.setAttribute('data-client', post.client_name); // ソート用属性
 
-      // クライアントロゴ表示に変更
+      // ★★★ 新しいHTML構造：正方形のロゴコンテナ + コンテンツエリア ★★★
       postCard.innerHTML = `
-          <img src="${post.client_logo}" alt="${post.client_name} Logo" class="client-logo-thumbnail" />
+          <div class="logo-container">
+            <img src="${post.client_logo}" alt="${post.client_name} Logo" class="client-logo-thumbnail" />
+          </div>
           <div class="post-item-content"> 
             <h3>${post.title}</h3>
             <p>${post.client_name}</p>
