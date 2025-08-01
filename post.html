@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>作品詳細 | STARTEND Design Co.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/portfolio/css/main.css" />
+</head>
+<body>
+  <script>
+    // ★ここを修正しました: "front_auth=1" -> "front_auth_check=1"
+    if (!document.cookie.includes("front_auth_check=1")) {
+      window.location.href = "/portfolio/login.html";
+    }
+  </script>
+
+  <header>
+    <div class="logo">
+      <a href="/portfolio/"><img src="/portfolio/assets/logo.svg" alt="STARTEND Design Co." width="200" height="50"></a>
+    </div>
+  </header>
+
+  <main id="postDetail">
+    <p>読み込み中...</p>
+  </main>
+
+  <script src="/portfolio/js/post_detail.js"></script>
+</body>
+</html>
