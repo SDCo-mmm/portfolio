@@ -55,7 +55,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="gallery-grid">
           ${galleryHtml}
         </div>
-        <a href="/portfolio/index.html" class="back-link">&lt; 作品一覧へ戻る</a>
+        <div class="back-link-container">
+          <a href="/portfolio/index.html" class="back-link">&lt; 作品一覧へ戻る</a>
+        </div>
       </div>
     `;
   };
