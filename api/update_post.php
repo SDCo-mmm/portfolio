@@ -41,8 +41,9 @@ $post_id = $_POST['id'] ?? '';
 $title = $_POST['title'] ?? '';
 $client_name = $_POST['client_name'] ?? '';
 $description = $_POST['description'] ?? '';
-$client_logo_removed = ($_POST['client_logo_removed'] ?? 'false') === 'true'; // クライアントロゴ削除フラグ
-$updated_at = date('Y-m-d H:i:s'); // 更新日時
+$client_logo_removed = ($_POST['client_logo_removed'] ?? 'false') === 'true';
+$client_logo_unchanged = ($_POST['client_logo_unchanged'] ?? 'false') === 'true';
+$updated_at = date('Y-m-d H:i:s');
 
 // 編集対象の投稿を検索
 $current_post_index = -1;
@@ -63,32 +64,34 @@ if ($current_post_index === -1) {
 $existing_client_logo_path = $posts[$current_post_index]['client_logo'] ?? null;
 $client_logo_path = $existing_client_logo_path;
 
-// クライアントロゴの削除処理
-if ($client_logo_removed && $existing_client_logo_path) {
-    $old_logo_filepath = str_replace('/portfolio/', $upload_base_dir . '../', $existing_client_logo_path);
-    if (file_exists($old_logo_filepath)) {
-        unlink($old_logo_filepath);
+// クライアントロゴの処理
+if ($client_logo_removed) {
+    // ロゴ削除の場合
+    if ($existing_client_logo_path) {
+        $old_logo_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $existing_client_logo_path);
+        if (file_exists($old_logo_filepath)) {
+            unlink($old_logo_filepath);
+        }
     }
     $client_logo_path = null;
-}
-
-// 新しいクライアントロゴのアップロード処理
-if (isset($_FILES['client_logo']) && $_FILES['client_logo']['error'] === UPLOAD_ERR_OK) {
-    // 既存のロゴがあれば削除
-    if ($existing_client_logo_path && !$client_logo_removed) { // 削除フラグが立っていない場合のみ削除
-        $old_logo_filepath = str_replace('/portfolio/', $upload_base_dir . '../', $existing_client_logo_path);
+} elseif (isset($_FILES['client_logo']) && $_FILES['client_logo']['error'] === UPLOAD_ERR_OK) {
+    // 新しいロゴアップロードの場合
+    if ($existing_client_logo_path) {
+        $old_logo_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $existing_client_logo_path);
         if (file_exists($old_logo_filepath)) {
             unlink($old_logo_filepath);
         }
     }
 
     $file_info = $_FILES['client_logo'];
-    $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-    if (in_array($file_info['type'], $allowed_types)) {
-        $ext = pathinfo($file_info['name'], PATHINFO_EXTENSION);
-        $logo_filename = md5(time() . $file_info['name']) . '.' . $ext;
-        $destination = $client_logo_dir . $logo_filename;
+    $file_ext = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+    $allowed_ext = ['png', 'jpg', 'jpeg'];
+    $allowed_mime = ['image/png', 'image/jpeg'];
 
+    if (in_array($file_ext, $allowed_ext) && in_array($file_info['type'], $allowed_mime)) {
+        $logo_filename = $post_id . '_client_' . time() . '.' . $file_ext;
+        $destination = $client_logo_dir . $logo_filename;
+        
         if (move_uploaded_file($file_info['tmp_name'], $destination)) {
             $client_logo_path = '/portfolio/upload/client/' . $logo_filename;
         } else {
@@ -97,73 +100,121 @@ if (isset($_FILES['client_logo']) && $_FILES['client_logo']['error'] === UPLOAD_
     } else {
         error_log("Invalid client logo file type: " . $file_info['name']);
     }
+} elseif ($client_logo_unchanged) {
+    // ロゴを変更しない場合は既存のパスを保持
+    $client_logo_path = $existing_client_logo_path;
 }
-
 
 // ギャラリー画像の処理
 $new_gallery_images_data = [];
-$existing_gallery_paths = $posts[$current_post_index]['gallery_images'] ?? [];
+$existing_gallery_images = $posts[$current_post_index]['gallery_images'] ?? [];
 
-// 既存のギャラリー画像を再構築 (削除されたもの以外)
-$kept_existing_image_paths = json_decode($_POST['existing_gallery_images_json'] ?? '[]', true);
+// 既存ギャラリー画像の処理
+$existing_paths = $_POST['existing_gallery_paths'] ?? [];
+$existing_captions = $_POST['existing_gallery_captions'] ?? [];
 
-// まず、保持する既存画像をリストに追加
-foreach ($existing_gallery_paths as $existing_image) {
-    // パスのみで比較するため、キャプションは含まない
-    if (in_array($existing_image['path'], $kept_existing_image_paths)) {
-        // 保持する画像であれば、更新されたキャプションを適用
-        $found_index = array_search($existing_image['path'], $kept_existing_image_paths);
-        $caption_from_form = $_POST['existing_gallery_captions'][$found_index] ?? '';
+// 既存画像で削除されなかったものを保持
+foreach ($existing_gallery_images as $existing_image) {
+    $image_path = $existing_image['path'];
+    $path_index = array_search($image_path, $existing_paths);
+    
+    if ($path_index !== false) {
+        // この画像は保持される
+        $caption = $existing_captions[$path_index] ?? $existing_image['caption'];
         $new_gallery_images_data[] = [
-            "path" => $existing_image['path'],
-            "caption" => $caption_from_form
+            "path" => $image_path,
+            "caption" => $caption
         ];
     } else {
-        // フォームから送られてこなかった（削除された）画像は物理削除
-        $old_image_filepath = str_replace('/portfolio/', $upload_base_dir . '../', $existing_image['path']);
+        // この画像は削除される
+        $old_image_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $image_path);
         if (file_exists($old_image_filepath)) {
             unlink($old_image_filepath);
         }
     }
 }
 
-
-// 新規アップロードされたギャラリー画像の処理
-if (isset($_FILES['new_gallery_images'])) {
-    foreach ($_FILES['new_gallery_images']['error'] as $key => $error) {
+// 既存画像の変更（ファイル再アップロード）の処理
+if (isset($_FILES['existing_gallery_images'])) {
+    foreach ($_FILES['existing_gallery_images']['error'] as $key => $error) {
         if ($error === UPLOAD_ERR_OK) {
+            // 既存画像の対応するパスを取得
+            $old_path = $existing_paths[$key] ?? '';
+            
+            // 古い画像ファイルを削除
+            if ($old_path) {
+                $old_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $old_path);
+                if (file_exists($old_filepath)) {
+                    unlink($old_filepath);
+                }
+            }
+            
             $file_info = [
-                'name' => $_FILES['new_gallery_images']['name'][$key],
-                'type' => $_FILES['new_gallery_images']['type'][$key],
-                'tmp_name' => $_FILES['new_gallery_images']['tmp_name'][$key],
-                'error' => $_FILES['new_gallery_images']['error'][$key],
-                'size' => $_FILES['new_gallery_images']['size'][$key]
+                'name' => $_FILES['existing_gallery_images']['name'][$key],
+                'type' => $_FILES['existing_gallery_images']['type'][$key],
+                'tmp_name' => $_FILES['existing_gallery_images']['tmp_name'][$key],
+                'error' => $_FILES['existing_gallery_images']['error'][$key],
+                'size' => $_FILES['existing_gallery_images']['size'][$key]
             ];
 
-            $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
-            if (in_array($file_info['type'], $allowed_types)) {
-                $ext = pathinfo($file_info['name'], PATHINFO_EXTENSION);
-                $image_filename = md5(time() . $file_info['name'] . uniqid()) . '.' . $ext; // さらにユニーク性を高める
-                $destination = $works_images_dir . $image_filename;
+            $file_ext = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+            $allowed_ext = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+            $allowed_mime = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 
+            if (in_array($file_ext, $allowed_ext) && in_array($file_info['type'], $allowed_mime)) {
+                $image_filename = $post_id . '_work_' . time() . '_' . uniqid() . '.' . $file_ext;
+                $destination = $works_images_dir . $image_filename;
+                
                 if (move_uploaded_file($file_info['tmp_name'], $destination)) {
-                    // 新規アップロードされた画像のキャプションは、フォームからのgallery_captions[]の対応するインデックスから取得
-                    // このインデックスは、JavaScriptで動的に追加される新しい入力フィールドに対応
-                    $caption = $_POST['new_gallery_captions'][$key] ?? ''; // 新規画像用のキャプション
-                    $new_gallery_images_data[] = [
-                        "path" => '/portfolio/upload/works/' . $image_filename,
-                        "caption" => $caption
-                    ];
-                } else {
-                    error_log("Failed to move new gallery image: " . $file_info['name']);
+                    $caption = $existing_captions[$key] ?? '';
+                    
+                    // 配列内の対応する要素を更新
+                    foreach ($new_gallery_images_data as &$gallery_item) {
+                        if ($gallery_item['path'] === $old_path) {
+                            $gallery_item['path'] = '/portfolio/upload/works/' . $image_filename;
+                            $gallery_item['caption'] = $caption;
+                            break;
+                        }
+                    }
                 }
-            } else {
-                error_log("Invalid new gallery image file type: " . $file_info['name']);
             }
         }
     }
 }
 
+// 新規ギャラリー画像の追加
+if (isset($_FILES['gallery_images'])) {
+    $gallery_captions = $_POST['gallery_captions'] ?? [];
+    
+    foreach ($_FILES['gallery_images']['error'] as $key => $error) {
+        if ($error === UPLOAD_ERR_OK) {
+            $file_info = [
+                'name' => $_FILES['gallery_images']['name'][$key],
+                'type' => $_FILES['gallery_images']['type'][$key],
+                'tmp_name' => $_FILES['gallery_images']['tmp_name'][$key],
+                'error' => $_FILES['gallery_images']['error'][$key],
+                'size' => $_FILES['gallery_images']['size'][$key]
+            ];
+
+            $file_ext = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+            $allowed_ext = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+            $allowed_mime = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+
+            if (in_array($file_ext, $allowed_ext) && in_array($file_info['type'], $allowed_mime)) {
+                $image_filename = $post_id . '_work_' . time() . '_' . uniqid() . '.' . $file_ext;
+                $destination = $works_images_dir . $image_filename;
+                
+                if (move_uploaded_file($file_info['tmp_name'], $destination)) {
+                    $caption = $gallery_captions[$key] ?? '';
+                    $new_gallery_images_data[] = [
+                        "path" => '/portfolio/upload/works/' . $image_filename,
+                        "caption" => $caption
+                    ];
+                }
+            }
+        }
+    }
+}
 
 // 投稿データを更新
 $posts[$current_post_index]['title'] = $title;
@@ -171,13 +222,13 @@ $posts[$current_post_index]['client_name'] = $client_name;
 $posts[$current_post_index]['description'] = $description;
 $posts[$current_post_index]['client_logo'] = $client_logo_path;
 $posts[$current_post_index]['gallery_images'] = $new_gallery_images_data;
-$posts[$current_post_index]['updated_at'] = $updated_at; // 更新日時を追加
+$posts[$current_post_index]['updated_at'] = $updated_at;
 
 // JSONデータをファイルに書き込む
 if (file_put_contents($posts_file, json_encode($posts, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
     echo json_encode(["status" => "success", "message" => "投稿が正常に更新されました。", "postId" => $post_id]);
 } else {
-    http_response_code(500); // Internal Server Error
+    http_response_code(500);
     echo json_encode(["status" => "error", "message" => "投稿の更新に失敗しました。"]);
 }
 ?>
