@@ -1,0 +1,39 @@
+[
+  {
+    "id": "post003",
+    "title": "ECサイト向けブランドデザイン",
+    "client_name": "SkyNet Solutions",
+    "description": "新規立ち上げのECサイトのブランドイメージ構築を担当。ロゴ、Webサイトのデザインガイドライン、販促物のデザインまでを一貫して行いました。ユーザーフレンドリーなUI/UXを意識した設計です。",
+    "client_logo": "/portfolio/upload/client/skynet_logo.png",
+    "gallery_images": [
+      { "path": "/portfolio/upload/works/skynet_work01.jpg", "caption": "Webサイト トップページ" },
+      { "path": "/portfolio/upload/works/skynet_work02.jpg", "caption": "プロダクトページUI" },
+      { "path": "/portfolio/upload/works/skynet_work03.jpg", "caption": "販促物デザイン" }
+    ],
+    "created_at": "2025-07-28 10:00:00"
+  },
+  {
+    "id": "post001",
+    "title": "企業コーポレートサイトリニューアル",
+    "client_name": "FutureTech Inc.",
+    "description": "FutureTech社の古くなったコーポレートサイトを最新のデザイントレンドとレスポンシブデザインで全面リニューアル。SEO対策も考慮し、アクセス数とエンゲージメントの向上に貢献しました。",
+    "client_logo": "/portfolio/upload/client/futuretech_logo.png",
+    "gallery_images": [
+      { "path": "/portfolio/upload/works/futuretech_work01.jpg", "caption": "リニューアル後のトップページ" },
+      { "path": "/portfolio/upload/works/futuretech_work02.jpg", "caption": "サービス紹介ページ" }
+    ],
+    "created_at": "2025-07-30 14:30:00"
+  },
+  {
+    "id": "post002",
+    "title": "モバイルゲームUI/UX設計",
+    "client_name": "GameFlow Studio",
+    "description": "新作モバイルゲームのUI/UX設計を担当。直感的で没入感のあるゲーム体験を提供するため、ユーザーテストを重ねて改善を行いました。視覚的な魅力と操作性を両立させています。",
+    "client_logo": "/portfolio/upload/client/gameflow_logo.png",
+    "gallery_images": [
+      { "path": "/portfolio/upload/works/gameflow_work01.jpg", "caption": "ゲーム内メニュー画面" },
+      { "path": "/portfolio/upload/works/gameflow_work02.jpg", "caption": "バトル画面UI" }
+    ],
+    "created_at": "2025-07-29 09:15:00"
+  }
+]

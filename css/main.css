@@ -1,0 +1,231 @@
+/* Google Fonts */
+body {
+  font-family: 'M PLUS 1p', 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f8f8f8;
+  color: #333;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.logo img {
+  max-width: 200px;
+  height: 50px;
+}
+
+.sort-control select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+main {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 20px auto;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+/* ★post-item img から固定の高さを削除し、ロゴのスタイルと競合しないように調整 */
+.post-item {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease-in-out;
+  display: flex; /* flexboxを追加して内部要素の配置を制御 */
+  flex-direction: column; /* 縦方向に要素を並べる */
+  align-items: center; /* 中央揃え */
+  text-align: center; /* テキストも中央揃え */
+}
+
+.post-item:hover {
+  transform: translateY(-5px);
+}
+
+/* ★このセレクタは、クライアントロゴ以外の画像、または詳細ページのギャラリー画像などに適用 */
+/* ★グリッドアイテム内のロゴ画像には .client-logo-thumbnail が適用されるため、このスタイルは影響しないか、最小限にする */
+.post-item img {
+  width: 100%;
+  /* height: 200px; を削除 */
+  /* object-fit: cover; を削除 */
+  display: block;
+}
+
+.post-item-content {
+  padding: 15px;
+  flex-grow: 1; /* 残りのスペースを埋める */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* コンテンツを中央寄せ */
+  width: 100%; /* 親要素の幅いっぱいに */
+}
+
+.post-item h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.post-item p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .grid-container {
+    grid-template-columns: 1fr; /* スマホでは1カラムに */
+  }
+}
+
+/* main.css の既存スタイルに追記 (post.html 用の詳細ページスタイル) */
+
+.post-detail-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 900px; /* 詳細ページの最大幅 */
+  margin: 20px auto; /* 中央寄せ */
+}
+
+.post-detail-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.client-info {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 中央寄せ */
+  margin-bottom: 20px;
+  gap: 15px; /* ロゴとクライアント名の間のスペース */
+}
+
+.client-logo {
+  max-width: 80px; /* クライアントロゴのサイズ */
+  height: auto;
+  border-radius: 50%; /* 円形にする場合 */
+  border: 1px solid #eee;
+  padding: 5px;
+  background-color: #fff;
+}
+
+.client-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.description {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 30px;
+  text-align: justify; /* 両端揃え */
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 画像のレイアウト */
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.gallery-item {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.gallery-item p {
+  padding: 10px;
+  font-size: 0.9rem;
+  color: #777;
+  margin: 0;
+}
+
+.back-link {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+  font-size: 1.1rem;
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.back-link:hover {
+  color: #0056b3;
+}
+
+/* レスポンシブ対応 (スマホ時は中央寄せ＆1カラム) */
+@media (max-width: 768px) {
+  .post-detail-content {
+    padding: 20px;
+    margin: 10px auto;
+  }
+  .post-detail-content h1 {
+    font-size: 2rem;
+  }
+  .client-info {
+    flex-direction: column; /* スマホでは縦並び */
+    text-align: center;
+  }
+  .gallery-grid {
+    grid-template-columns: 1fr; /* スマホでは1カラムに */
+  }
+}
+
+/* ★★★ クライアントロゴのモノクロ表示とホバー時のカラー変化（ここを追記/調整） ★★★ */
+.client-logo-thumbnail {
+  width: 100%; /* 親要素の幅いっぱいに */
+  max-width: 200px; /* ロゴの最大幅を制限 (グリッドアイテム内で大きくなりすぎないように) */
+  height: auto;
+  display: block;
+  object-fit: contain; /* 画像の比率を維持してコンテナに収める */
+  max-height: 150px; /* 必要に応じて最大高さを設定 */
+  padding: 10px 0; /* ロゴの上下パディング、左右は0で幅を確保 */
+
+  /* モノクロ化 */
+  filter: grayscale(100%) brightness(150%); /* 明るさも調整して、ロゴがはっきり見えるように */
+  opacity: 0.5; /* 50%濃度 */
+  transition: filter 0.3s ease, opacity 0.3s ease; /* ホバー時のアニメーション */
+}
+
+/* ホバー時にカラー化 */
+.post-item:hover .client-logo-thumbnail { /* ★親要素を.post-itemに変更 */
+  filter: grayscale(0%) brightness(100%); /* カラーに戻す */
+  opacity: 1; /* 濃度を100%に戻す */
+}
