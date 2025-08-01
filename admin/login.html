@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>管理画面 ログイン | STARTEND Design Co.</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/portfolio/admin/css/admin.css" />
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">STARTEND Design Co. (Admin)</div>
+
+    <form id="adminLoginForm">
+      <input type="password" id="adminPassword" placeholder="Admin Password" required />
+      <button type="submit">ログイン</button>
+      <div class="error" id="adminErrorMsg" style="display:none;">
+        パスワードが違います。 / Incorrect password.
+      </div>
+    </form>
+  </div>
+
+  <script src="/portfolio/admin/js/admin_login.js"></script>
+</body>
+</html>

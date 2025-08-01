@@ -1,0 +1,477 @@
+/* admin.css */
+body {
+  font-family: 'M PLUS 1p', 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f0f2f5;
+}
+
+.login-container .logo {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.login-container form {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 100%;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-container input[type="password"] {
+  width: calc(100% - 20px);
+  padding: 12px 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.login-container button[type="submit"] {
+  background-color: #28a745; /* Admin用に色を変更 */
+  color: white;
+  padding: 12px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-container button[type="submit"]:hover {
+  background-color: #218838;
+}
+
+.login-container .error {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+/* Admin Header & Main Content */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #343a40; /* ダーク系 */
+  color: #f8f9fa;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.admin-header .logo {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.admin-header nav a {
+  color: #f8f9fa;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 8px 15px;
+  border: 1px solid #f8f9fa;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.admin-header nav a:hover {
+  background-color: #f8f9fa;
+  color: #343a40;
+}
+
+.admin-main {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 20px auto;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.admin-main h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #343a40;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+#createPostBtn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.3s ease;
+}
+
+#createPostBtn:hover {
+  background-color: #0056b3;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  .admin-header nav a {
+    width: 80%;
+    display: inline-block;
+    margin-top: 10px;
+  }
+  .admin-main {
+    padding: 15px;
+    margin: 10px;
+  }
+}
+
+/* admin.css の既存スタイルに追記 */
+
+.posts-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.posts-table th,
+.posts-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.posts-table th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+  color: #555;
+}
+
+.posts-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.posts-table tr:hover {
+  background-color: #e9e9e9;
+}
+
+.posts-table .actions button {
+  padding: 8px 12px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.posts-table .edit-btn {
+  background-color: #ffc107; /* 黄色系 */
+  color: #333;
+}
+
+.posts-table .edit-btn:hover {
+  background-color: #e0a800;
+}
+
+.posts-table .delete-btn {
+  background-color: #dc3545; /* 赤色系 */
+  color: white;
+}
+
+.posts-table .delete-btn:hover {
+  background-color: #c82333;
+}
+
+/* レスポンシブ対応 (テーブル) */
+@media (max-width: 768px) {
+  .posts-table, .posts-table thead, .posts-table tbody, .posts-table th, .posts-table td, .posts-table tr {
+    display: block;
+  }
+  .posts-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  .posts-table tr {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .posts-table td {
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 50%;
+    text-align: right;
+  }
+  .posts-table td:before {
+    position: absolute;
+    top: 0;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    content: attr(data-label); /* JSでdata-label属性を追加する */
+    font-weight: 600;
+    text-align: left;
+    color: #555;
+  }
+  /* スマホ表示時のdata-label設定（JSで動的に追加する必要があるが、ここではCSSのみ） */
+  .posts-table td:nth-of-type(1):before { content: "タイトル"; }
+  .posts-table td:nth-of-type(2):before { content: "クライアント名"; }
+  .posts-table td:nth-of-type(3):before { content: "作成日"; }
+  .posts-table td:nth-of-type(4):before { content: "アクション"; }
+  .posts-table .actions {
+    text-align: center;
+    padding-left: 0;
+  }
+}
+
+/* admin.css の既存スタイルに追記 */
+
+.admin-main h1 {
+  /* 既存のh1スタイルは維持しつつ、フォーム用のマージンを調整 */
+  margin-bottom: 30px;
+}
+
+#postForm {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: 20px auto; /* センターに表示 */
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: calc(100% - 22px); /* パディングとボーダーを考慮 */
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-group input[type="file"] {
+  width: 100%;
+  padding: 5px 0;
+  border: 1px solid #ddd; /* ファイル入力にもボーダー */
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.image-preview {
+  margin-top: 10px;
+  border: 1px dashed #ccc;
+  min-height: 50px; /* プレビューがないときも領域を確保 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  border-radius: 4px;
+  overflow: hidden; /* 画像がはみ出さないように */
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 150px; /* プレビュー画像の最大高さ */
+  height: auto;
+  display: block;
+}
+
+.gallery-image-item {
+  display: flex;
+  flex-wrap: wrap; /* スマホで折り返す */
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  background-color: #fcfcfc;
+}
+
+.gallery-image-item input[type="file"] {
+  flex: 1 1 250px; /* ファイル入力が広めに */
+}
+
+.gallery-image-item input[type="text"] {
+  flex: 1 1 200px; /* キャプション入力 */
+}
+
+.gallery-image-item .image-preview {
+  flex: 0 0 100px; /* プレビューは固定幅 */
+  height: 100px;
+  min-height: 0; /* min-heightをオーバーライド */
+  padding: 0; /* プレビューのパディング調整 */
+  margin: 0;
+  border: none;
+  background-color: transparent;
+}
+
+.remove-gallery-image-btn {
+  background-color: #f44336; /* 赤色 */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+  white-space: nowrap; /* ボタンが改行されないように */
+}
+
+.remove-gallery-image-btn:hover {
+  background-color: #d32f2f;
+}
+
+.add-button {
+  background-color: #17a2b8; /* 青緑系 */
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+.add-button:hover {
+  background-color: #138496;
+}
+
+.submit-button {
+  background-color: #28a745; /* 緑色 */
+  color: white;
+  padding: 15px 25px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: block;
+  width: 100%;
+  max-width: 300px; /* ボタンの最大幅 */
+  margin: 30px auto 0; /* 中央寄せ */
+}
+
+.submit-button:hover {
+  background-color: #218838;
+}
+
+.form-message {
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.form-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.form-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* レスポンシブ対応 (フォーム) */
+@media (max-width: 768px) {
+  #postForm {
+    padding: 20px;
+    margin: 10px auto;
+  }
+  .form-group input[type="text"],
+  .form-group textarea,
+  .form-group input[type="file"] {
+    width: calc(100% - 20px); /* スマホでのパディング調整 */
+  }
+  .gallery-image-item {
+    flex-direction: column; /* スマホでは縦並び */
+    align-items: stretch;
+  }
+  .gallery-image-item input[type="file"],
+  .gallery-image-item input[type="text"] {
+    flex: none; /* 固定幅を解除 */
+    width: 100%;
+  }
+  .gallery-image-item .image-preview {
+    width: 100%;
+    height: auto;
+    max-height: 150px;
+  }
+  .remove-gallery-image-btn {
+    width: 100%;
+  }
+  .submit-button {
+    max-width: 100%;
+  }
+}
+
+/* admin.css の既存スタイルに追記 */
+
+.remove-button { /* クライアントロゴ削除ボタンなど汎用的に使用 */
+  background-color: #f44336; /* 赤色 */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+  margin-left: 10px; /* inputとの間隔 */
+}
+
+.remove-button:hover {
+  background-color: #d32f2f;
+}
+
+/* ファイル入力と削除ボタンが並ぶ際の調整 */
+.form-group input[type="file"] + .remove-button {
+  margin-top: 5px; /* ファイル入力の下に配置される場合 */
+}
+
+/* ギャラリー画像削除ボタンと共通化しても良いが、今回は区別 */
+/* .remove-gallery-image-btn のスタイルは既に定義済み */

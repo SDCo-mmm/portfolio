@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>新規投稿作成 | 管理画面</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/portfolio/admin/css/admin.css" />
+</head>
+<body>
+  <script>
+    // 管理画面閲覧ガード
+    if (!document.cookie.includes("admin_auth_check=1")) {
+      window.location.href = "/portfolio/admin/login.html";
+    }
+  </script>
+
+  <header class="admin-header">
+    <div class="logo">STARTEND Design Co. (Admin)</div>
+    <nav>
+      <a href="/portfolio/admin/index.html">投稿一覧へ戻る</a>
+      <a href="#" id="logoutBtn">ログアウト</a>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <h1 id="formTitle">新規投稿作成</h1>
+    <form id="postForm" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="postTitle">タイトル</label>
+        <input type="text" id="postTitle" name="title" required />
+      </div>
+
+      <div class="form-group">
+        <label for="clientName">クライアント名</label>
+        <input type="text" id="clientName" name="client_name" required />
+      </div>
+
+      <div class="form-group">
+        <label for="description">説明文</label>
+        <textarea id="description" name="description" rows="5" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="clientLogo">クライアントロゴ (PNG/JPEG)</label>
+        <input type="file" id="clientLogo" name="client_logo" accept="image/png, image/jpeg" />
+        <div id="clientLogoPreview" class="image-preview"></div>
+      </div>
+
+      <div class="form-group">
+        <label>ギャラリー画像 (複数選択可)</label>
+        <div id="galleryImagesContainer">
+          <div class="gallery-image-item">
+            <input type="file" name="gallery_images[]" accept="image/*" />
+            <input type="text" name="gallery_captions[]" placeholder="キャプション" />
+            <div class="image-preview"></div>
+          </div>
+        </div>
+        <button type="button" id="addGalleryImageBtn" class="add-button">ギャラリー画像を追加</button>
+      </div>
+      
+      <button type="submit" class="submit-button">投稿を保存</button>
+      <div id="formMessage" class="form-message" style="display:none;"></div>
+    </form>
+  </main>
+
+  <script src="/portfolio/admin/js/post_form_app.js"></script>
+  <script>
+    // ログアウト機能
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      document.cookie = "admin_auth_check=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/admin/";
+      document.cookie = "admin_auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/admin/";
+      window.location.href = "/portfolio/admin/login.html";
+    });
+  </script>
+</body>
+</html>

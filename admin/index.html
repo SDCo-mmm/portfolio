@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>管理画面 | STARTEND Design Co.</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/portfolio/admin/css/admin.css" />
+</head>
+<body>
+  <script>
+    // 管理画面閲覧ガード
+    if (!document.cookie.includes("admin_auth_check=1")) {
+      window.location.href = "/portfolio/admin/login.html";
+    }
+  </script>
+
+  <header class="admin-header">
+    <div class="logo">STARTEND Design Co. (Admin)</div>
+    <nav>
+      <a href="#" id="logoutBtn">ログアウト</a>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <h1>投稿管理</h1>
+    <button id="createPostBtn">新規投稿作成</button>
+    <div id="postsList">
+      <p>投稿を読み込み中...</p>
+    </div>
+  </main>
+
+  <script src="/portfolio/admin/js/admin_app.js"></script>
+  <script>
+    // ログアウト機能
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      // Cookieを削除してログインページへリダイレクト
+      document.cookie = "admin_auth_check=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/admin/";
+      document.cookie = "admin_auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/admin/";
+      window.location.href = "/portfolio/admin/login.html";
+    });
+  </script>
+</body>
+</html>
