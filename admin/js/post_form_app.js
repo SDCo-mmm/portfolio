@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 編集モードの場合、既存の投稿データを保持する隠しフィールド
   let existingPostData = null; 
+  let clientLogoDeleted = false; // クライアントロゴが削除されたかどうかのフラグ
 
   // 画像プレビュー表示関数
   const setupImagePreview = (fileInput, previewContainer, initialImageUrl = null) => {
@@ -56,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       // ファイルが選択されたらロゴ削除ボタンを非表示
       clientLogoRemoveBtn.style.display = 'none';
+      clientLogoDeleted = false; // 削除フラグをリセット
     });
   };
 
@@ -75,8 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     newItem.innerHTML = `
       ${hiddenInputHtml}
-      <input type="file" name="gallery_images[]" accept="image/*" />
-      <input type="text" name="${isExisting ? 'existing_gallery_captions[]' : 'new_gallery_captions[]'}" placeholder="キャプション" value="${initialCaption}" />
+      <input type="file" name="${isExisting ? 'existing_gallery_images[]' : 'gallery_images[]'}" accept="image/*" />
+      <input type="text" name="${isExisting ? 'existing_gallery_captions[]' : 'gallery_captions[]'}" placeholder="キャプション" value="${initialCaption}" />
       <div class="image-preview"></div>
       <button type="button" class="remove-gallery-image-btn">削除</button>
     `;
@@ -101,11 +103,9 @@ document.addEventListener("DOMContentLoaded", () => {
   clientLogoRemoveBtn.addEventListener('click', () => {
     clientLogoPreview.innerHTML = ''; // プレビューをクリア
     clientLogoInput.value = ''; // ファイル入力をクリア
-    // hidden inputなどで削除フラグを立てる必要があるが、今回はPHP側でシンプルに処理
-    // FormDataに client_logo_removed: 'true' を追加する
     clientLogoRemoveBtn.style.display = 'none'; // ボタンを隠す
+    clientLogoDeleted = true; // 削除フラグを立てる
   });
-
 
   // フォーム送信時の処理
   postForm.addEventListener("submit", async (e) => {
@@ -115,15 +115,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const formData = new FormData(postForm);
     
-    // 既存のクライアントロゴが削除された場合
-    if (clientLogoRemoveBtn.style.display === 'none' && clientLogoInput.value === '' && existingPostData && existingPostData.client_logo) {
+    // クライアントロゴの処理
+    if (clientLogoDeleted) {
       formData.append('client_logo_removed', 'true');
+    } else if (!clientLogoInput.files.length && existingPostData && existingPostData.client_logo) {
+      formData.append('client_logo_unchanged', 'true');
     }
-    // クライアントロゴが変更されない場合（file inputが空で既存データがある場合）
-    else if (clientLogoInput.files.length === 0 && existingPostData && existingPostData.client_logo) {
-      formData.append('client_logo_unchanged', 'true'); // PHP側で既存を維持するフラグ
-    }
-    
 
     let apiEndpoint = '';
     let successMessage = '';
@@ -202,11 +199,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // ギャラリー画像の既存プレビューとフィールド追加
           galleryImagesContainer.innerHTML = ''; // 初期ギャラリーフィールドをクリア
-          postToEdit.gallery_images.forEach(img => {
-            addGalleryImageField(img.path, img.caption, true); // 既存画像として追加
-          });
-          // ギャラリー画像がない場合も、最低1つは入力フィールドを表示
-          if (postToEdit.gallery_images.length === 0) {
+          if (postToEdit.gallery_images && postToEdit.gallery_images.length > 0) {
+            postToEdit.gallery_images.forEach(img => {
+              addGalleryImageField(img.path, img.caption, true); // 既存画像として追加
+            });
+          } else {
+            // ギャラリー画像がない場合も、最低1つは入力フィールドを表示
             addGalleryImageField();
           }
           
