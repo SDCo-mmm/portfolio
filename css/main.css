@@ -37,11 +37,19 @@ main {
 
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 25px;
 }
 
-/* ★★★ 投稿アイテムのスタイル大幅修正 ★★★ */
+/* ★★★ 大画面での最大4列制限 ★★★ */
+@media (min-width: 1000px) {
+  .grid-container {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 1200px;
+  }
+}
+
+/* ★★★ 投稿アイテムのスタイル ★★★ */
 .post-item {
   background-color: #fff;
   border-radius: 6px;
@@ -52,7 +60,7 @@ main {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
-  aspect-ratio: 1 / 1; /* 全体を正方形に */
+  aspect-ratio: 1 / 1; /* 全体を正方形に維持 */
 }
 
 .post-item:hover {
@@ -63,22 +71,22 @@ main {
 /* ★★★ ロゴ表示エリア ★★★ */
 .logo-container {
   width: 100%;
-  flex: 1; /* 残りスペースの大部分を占める */
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #fff;
-  padding: 20px;
+  padding: 18px;
   box-sizing: border-box;
 }
 
 /* ★★★ クライアントロゴのサムネイル表示 ★★★ */
 .client-logo-thumbnail {
-  max-width: 60%; /* コンテナの60%以下に制限 */
-  max-height: 60%; /* コンテナの60%以下に制限 */
+  max-width: 65%;
+  max-height: 65%;
   width: auto;
   height: auto;
-  object-fit: contain; /* 比率を維持してコンテナに収める */
+  object-fit: contain;
   
   /* モノクロ化エフェクト */
   filter: grayscale(100%) brightness(120%);
@@ -94,25 +102,25 @@ main {
 
 /* ★★★ コンテンツエリア ★★★ */
 .post-item-content {
-  padding: 15px 20px 20px 20px;
+  padding: 12px 15px 15px 15px;
   background-color: #fff;
   display: flex;
   flex-direction: column;
   justify-content: center;
   text-align: center;
-  flex-shrink: 0; /* コンテンツエリアのサイズを固定 */
+  flex-shrink: 0;
 }
 
 .post-item h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.1rem;
+  margin: 0 0 6px 0;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.3;
   color: #333;
 }
 
 .post-item p {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #666;
   margin: 0;
   font-weight: 400;
@@ -126,52 +134,53 @@ main {
   }
   
   .grid-container {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px;
   }
   
   .logo-container {
-    padding: 15px; /* モバイルでは余白を少し小さく */
+    padding: 15px;
   }
   
   .client-logo-thumbnail {
-    max-width: 65%; /* モバイルでは少し大きめに */
-    max-height: 65%;
+    max-width: 70%;
+    max-height: 70%;
   }
   
   .post-item-content {
-    padding: 12px 15px 15px 15px;
+    padding: 10px 12px 12px 12px;
   }
   
   .post-item h3 {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
   
   .post-item p {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
   .grid-container {
-    grid-template-columns: 1fr; /* 極小画面では1カラム */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
   }
 }
 
-/* main.css の既存スタイルに追記 (post.html 用の詳細ページスタイル) */
+/* ==================== 詳細ページスタイル ==================== */
 
 .post-detail-content {
   background-color: #fff;
-  padding: 30px;
+  padding: 50px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  max-width: 900px; /* 詳細ページの最大幅 */
-  margin: 20px auto; /* 中央寄せ */
+  max-width: 1000px;
+  margin: 40px auto;
 }
 
 .post-detail-content h1 {
-  font-size: 1.8rem;
-  margin-bottom: 30px;
+  font-size: 2rem;
+  margin-bottom: 50px;
   text-align: center;
   font-weight: 600;
   color: #333;
@@ -179,104 +188,179 @@ main {
 
 .client-info {
   display: flex;
-  flex-direction: column; /* 縦並びに変更 */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 30px;
-  gap: 12px; /* ロゴとクライアント名の間のスペース */
+  margin-bottom: 60px;
+  gap: 20px;
 }
 
 .client-logo {
-  width: 120px; /* 固定幅で指定 */
+  width: 140px;
   height: auto;
-  object-fit: contain; /* 比率を維持 */
+  object-fit: contain;
 }
 
 .client-name {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #555;
 }
 
 .description {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  margin-bottom: 40px;
-  text-align: justify; /* 両端揃え */
+  font-size: 1.15rem;
+  line-height: 1.9;
+  margin-bottom: 70px;
+  text-align: justify;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .gallery-grid {
   display: flex;
-  flex-direction: column; /* 縦並びに変更 */
-  gap: 0; /* 間隔なし（区切り線で分離） */
-  margin-bottom: 40px;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 70px;
 }
 
 .gallery-item {
-  padding: 25px 0; /* 上下のパディング */
+  padding: 50px 0;
   text-align: center;
-  border-bottom: 1px solid #e5e5e5; /* 薄い区切り線 */
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .gallery-item:last-child {
-  border-bottom: none; /* 最後のアイテムは区切り線なし */
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .gallery-item img {
   max-width: 100%;
+  /* ★★★ 縦長画像の表示制限を追加 ★★★ */
+  max-height: 80vh; /* ビューポートの80%以下に制限 */
   height: auto;
   display: block;
-  margin: 0 auto; /* 中央寄せ */
+  margin: 0 auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  object-fit: contain; /* 画像の比率を保持 */
 }
 
 .gallery-item p {
-  margin-top: 15px;
-  font-size: 0.9rem;
+  margin-top: 25px;
+  font-size: 1rem;
   color: #777;
   margin-bottom: 0;
+  font-style: italic;
 }
 
 .back-link-container {
   text-align: center;
-  margin-top: 30px;
+  margin-top: 50px;
 }
 
 .back-link {
-  display: inline-block; /* ブロック要素からインライン要素に変更 */
+  display: inline-block;
   font-size: 0.9rem;
   color: #888;
   text-decoration: none;
   transition: color 0.3s ease;
-  padding: 8px 0; /* 少しのパディングでクリック領域を確保 */
+  padding: 8px 0;
 }
 
 .back-link:hover {
   color: #555;
 }
 
+/* ★★★ 縦長画像専用のスタイル ★★★ */
+.gallery-item[data-aspect="vertical"] {
+  padding: 30px 0;
+}
+
+.gallery-item[data-aspect="vertical"] img {
+  max-height: 70vh;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.gallery-item[data-aspect="vertical"] img:hover {
+  transform: scale(1.02);
+}
+
+/* ★★★ 縦長画像用のモーダル表示 ★★★ */
+.image-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.9);
+  cursor: pointer;
+}
+
+.image-modal img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+.image-modal .close {
+  position: absolute;
+  top: 20px;
+  right: 35px;
+  color: #fff;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 /* レスポンシブ対応 (詳細ページ) */
 @media (max-width: 768px) {
   .post-detail-content {
-    padding: 20px;
-    margin: 10px auto;
+    padding: 30px;
+    margin: 20px auto;
   }
   .post-detail-content h1 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
+    margin-bottom: 35px;
+  }
+  .client-info {
+    margin-bottom: 40px;
+    gap: 15px;
   }
   .client-logo {
-    width: 100px; /* モバイルでは少し小さく */
+    width: 110px;
   }
   .client-name {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   .description {
-    font-size: 1rem;
-    text-align: left; /* モバイルでは左寄せ */
+    font-size: 1.05rem;
+    text-align: left;
+    margin-bottom: 50px;
+    line-height: 1.8;
   }
   .gallery-item {
-    padding: 20px 0; /* モバイルでは少し小さく */
+    padding: 35px 0;
+  }
+  .gallery-item img {
+    max-height: 60vh; /* モバイルでは制限をさらに厳しく */
+  }
+  .gallery-item[data-aspect="vertical"] img {
+    max-height: 50vh;
   }
   .gallery-item p {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+    margin-top: 20px;
+  }
+  .back-link-container {
+    margin-top: 40px;
   }
 }
