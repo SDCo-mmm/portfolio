@@ -20,7 +20,7 @@ if (!isset($_COOKIE['admin_auth_token']) || $_COOKIE['admin_auth_token'] !== 'au
     exit();
 }
 
-// ★★★ 新機能：サムネイル生成関数（グラデーション付き） ★★★
+// ★★★ 正しく修正されたサムネイル生成関数 ★★★
 function generateThumbnail($source_path, $thumbnail_path, $thumb_width = 600, $thumb_height = 450, $quality = 85) {
     $image_info = getimagesize($source_path);
     if (!$image_info) {
@@ -100,20 +100,23 @@ function generateThumbnail($source_path, $thumbnail_path, $thumb_width = 600, $t
         return false;
     }
     
-    // ★★★ 新機能：下部透過グラデーション効果を追加 ★★★
-    $gradient_height = intval($thumb_height * 0.25); // 画像の下25%にグラデーション
+    // ★★★ 正しい下部透過グラデーション効果 ★★★
+    $gradient_height = intval($thumb_height * 0.5); // 画像の下30%にグラデーション
     $gradient_start_y = $thumb_height - $gradient_height;
     
     // アルファブレンディングを有効にしてグラデーション描画
     imagealphablending($thumbnail_image, true);
     
     for ($y = $gradient_start_y; $y < $thumb_height; $y++) {
-        // グラデーションの透明度を計算（0-100の範囲）
-        $progress = ($y - $gradient_start_y) / $gradient_height;
-        $alpha = intval($progress * 100); // 0（完全不透明）から100（ほぼ透明）
+        // ★★★ 正しい修正：グラデーションの透明度計算 ★★★
+        $progress = ($y - $gradient_start_y) / $gradient_height; // 0.0 〜 1.0
         
-        // 白色の半透明色を作成（実際には元の色を薄くする効果）
-        $gradient_color = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, $alpha);
+        // 上部（progress = 0）は透明（元画像が見える）
+        // 下部（progress = 1）は不透明（白地で覆われる）
+        $alpha = intval($progress * 127); // 0（透明） → 127（不透明）
+        
+        // 白色の半透明色を作成
+        $gradient_color = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127 - $alpha);
         
         // 水平線を描画してグラデーション効果を作成
         imageline($thumbnail_image, 0, $y, $thumb_width - 1, $y, $gradient_color);
@@ -149,9 +152,9 @@ function generateThumbnail($source_path, $thumbnail_path, $thumb_width = 600, $t
     imagedestroy($thumbnail_image);
     
     if ($result) {
-        error_log("Thumbnail with gradient successfully generated: " . $thumbnail_path);
+        error_log("Thumbnail with correct gradient successfully generated: " . $thumbnail_path);
     } else {
-        error_log("Failed to save thumbnail with gradient: " . $thumbnail_path);
+        error_log("Failed to save thumbnail with correct gradient: " . $thumbnail_path);
     }
     
     return $result;

@@ -20,7 +20,7 @@ if (!isset($_COOKIE['admin_auth_token']) || $_COOKIE['admin_auth_token'] !== 'au
     exit();
 }
 
-// ★★★ サムネイル生成関数（グラデーション付き） ★★★
+// ★★★ 正しく修正されたサムネイル生成関数 ★★★
 function generateThumbnail($source_path, $thumbnail_path, $thumb_width = 600, $thumb_height = 450, $quality = 85) {
     $image_info = getimagesize($source_path);
     if (!$image_info) {
@@ -55,168 +55,6 @@ function generateThumbnail($source_path, $thumbnail_path, $thumb_width = 600, $t
     }
     
     $thumbnail_image = imagecreatetruecolor($thumb_width, $thumb_height);
-    
-    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
-        imagealphablending($thumbnail_image, false);
-        imagesavealpha($thumbnail_image, true);
-        $transparent = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127);
-        imagefilledrectangle($thumbnail_image, 0, 0, $thumb_width, $thumb_height, $transparent);
-    }
-    
-    $thumb_ratio = $thumb_width / $thumb_height;
-    $original_ratio = $original_width / $original_height;
-    
-    if ($original_ratio > $thumb_ratio) {
-        $crop_height = $original_height;
-        $crop_width = $original_height * $thumb_ratio;
-        $crop_x = ($original_width - $crop_width) / 2;
-        $crop_y = 0;
-    } else {
-        $crop_width = $original_width;
-        $crop_height = $original_width / $thumb_ratio;
-        $crop_x = 0;
-        $crop_y = 0; // 上部から切り取り
-    }
-    
-    $resize_success = imagecopyresampled(
-        $thumbnail_image, $source_image,
-        0, 0,
-        $crop_x, $crop_y,
-        $thumb_width, $thumb_height,
-        $crop_width, $crop_height
-    );
-    
-    if (!$resize_success) {
-        error_log("imagecopyresampled failed for thumbnail");
-        imagedestroy($source_image);
-        imagedestroy($thumbnail_image);
-        return false;
-    }
-    
-    // ★★★ 下部透過グラデーション効果を追加 ★★★
-    $gradient_height = intval($thumb_height * 0.25); // 画像の下25%にグラデーション
-    $gradient_start_y = $thumb_height - $gradient_height;
-    
-    // アルファブレンディングを有効にしてグラデーション描画
-    imagealphablending($thumbnail_image, true);
-    
-    for ($y = $gradient_start_y; $y < $thumb_height; $y++) {
-        // グラデーションの透明度を計算（0-100の範囲）
-        $progress = ($y - $gradient_start_y) / $gradient_height;
-        $alpha = intval($progress * 100); // 0（完全不透明）から100（ほぼ透明）
-        
-        // 白色の半透明色を作成（実際には元の色を薄くする効果）
-        $gradient_color = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, $alpha);
-        
-        // 水平線を描画してグラデーション効果を作成
-        imageline($thumbnail_image, 0, $y, $thumb_width - 1, $y, $gradient_color);
-    }
-    
-    // アルファブレンディングを無効にして透明度を保持
-    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
-        imagealphablending($thumbnail_image, false);
-        imagesavealpha($thumbnail_image, true);
-    }
-    
-    $result = false;
-    switch ($mime_type) {
-        case 'image/jpeg':
-            $result = imagejpeg($thumbnail_image, $thumbnail_path, $quality);
-            break;
-        case 'image/png':
-            $result = imagepng($thumbnail_image, $thumbnail_path, 9);
-            break;
-        case 'image/gif':
-            $result = imagegif($thumbnail_image, $thumbnail_path);
-            break;
-        case 'image/webp':
-            if (function_exists('imagewebp')) {
-                $result = imagewebp($thumbnail_image, $thumbnail_path, $quality);
-            }
-            break;
-    }
-    
-    imagedestroy($source_image);
-    imagedestroy($thumbnail_image);
-    
-    if ($result) {
-        error_log("Thumbnail with gradient successfully generated: " . $thumbnail_path);
-    } else {
-        error_log("Failed to save thumbnail with gradient: " . $thumbnail_path);
-    }
-    
-    return $result;
-}
-
-// ★★★ 縦長画像検出関数 ★★★
-function isVerticalImage($image_path, $vertical_threshold = 1.5) {
-    $image_info = getimagesize($image_path);
-    if (!$image_info) {
-        return false;
-    }
-    
-    $width = $image_info[0];
-    $height = $image_info[1];
-    $aspect_ratio = $height / $width;
-    
-    return $aspect_ratio >= $vertical_threshold;
-}
-
-// ★★★ 既存のリサイズ関数 ★★★
-function resizeImageWithDualConstraints($source_path, $destination_path, $max_width = 1000, $max_height = 3000, $quality = 85) {
-    $image_info = getimagesize($source_path);
-    if (!$image_info) {
-        return false;
-    }
-    
-    $original_width = $image_info[0];
-    $original_height = $image_info[1];
-    $mime_type = $image_info['mime'];
-    
-    $needs_resize = false;
-    $new_width = $original_width;
-    $new_height = $original_height;
-    
-    $width_ratio = ($original_width > $max_width) ? ($max_width / $original_width) : 1.0;
-    $height_ratio = ($original_height > $max_height) ? ($max_height / $original_height) : 1.0;
-    $resize_ratio = min($width_ratio, $height_ratio);
-    
-    if ($resize_ratio < 1.0) {
-        $new_width = intval($original_width * $resize_ratio);
-        $new_height = intval($original_height * $resize_ratio);
-        $needs_resize = true;
-        error_log("Image resize: {$original_width}x{$original_height} -> {$new_width}x{$new_height} (ratio: {$resize_ratio})");
-    }
-    
-    if (!$needs_resize) {
-        error_log("No resize needed: {$original_width}x{$original_height}");
-        return move_uploaded_file($source_path, $destination_path);
-    }
-    
-    $source_image = null;
-    switch ($mime_type) {
-        case 'image/jpeg':
-            $source_image = imagecreatefromjpeg($source_path);
-            break;
-        case 'image/png':
-            $source_image = imagecreatefrompng($source_path);
-            break;
-        case 'image/gif':
-            $source_image = imagecreatefromgif($source_path);
-            break;
-        case 'image/webp':
-            if (function_exists('imagecreatefromwebp')) {
-                $source_image = imagecreatefromwebp($source_path);
-            }
-            break;
-    }
-    
-    if (!$source_image) {
-        error_log("Failed to create source image from: " . $mime_type);
-        return false;
-    }
-    
-    $new_image = imagecreatetruecolor($new_width, $new_height);
     
     if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
         imagealphablending($new_image, false);
@@ -527,4 +365,169 @@ if (file_put_contents($posts_file, json_encode($posts, JSON_PRETTY_PRINT | JSON_
     http_response_code(500);
     echo json_encode(["status" => "error", "message" => "投稿の更新に失敗しました。"]);
 }
-?>
+?>type === 'image/gif' || $mime_type === 'image/webp') {
+        imagealphablending($thumbnail_image, false);
+        imagesavealpha($thumbnail_image, true);
+        $transparent = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127);
+        imagefilledrectangle($thumbnail_image, 0, 0, $thumb_width, $thumb_height, $transparent);
+    }
+    
+    $thumb_ratio = $thumb_width / $thumb_height;
+    $original_ratio = $original_width / $original_height;
+    
+    if ($original_ratio > $thumb_ratio) {
+        $crop_height = $original_height;
+        $crop_width = $original_height * $thumb_ratio;
+        $crop_x = ($original_width - $crop_width) / 2;
+        $crop_y = 0;
+    } else {
+        $crop_width = $original_width;
+        $crop_height = $original_width / $thumb_ratio;
+        $crop_x = 0;
+        $crop_y = 0; // 上部から切り取り
+    }
+    
+    $resize_success = imagecopyresampled(
+        $thumbnail_image, $source_image,
+        0, 0,
+        $crop_x, $crop_y,
+        $thumb_width, $thumb_height,
+        $crop_width, $crop_height
+    );
+    
+    if (!$resize_success) {
+        error_log("imagecopyresampled failed for thumbnail");
+        imagedestroy($source_image);
+        imagedestroy($thumbnail_image);
+        return false;
+    }
+    
+    // ★★★ 正しい下部透過グラデーション効果 ★★★
+    $gradient_height = intval($thumb_height * 0.5); // 画像の下30%にグラデーション
+    $gradient_start_y = $thumb_height - $gradient_height;
+    
+    // アルファブレンディングを有効にしてグラデーション描画
+    imagealphablending($thumbnail_image, true);
+    
+    for ($y = $gradient_start_y; $y < $thumb_height; $y++) {
+        // ★★★ 正しい修正：グラデーションの透明度計算 ★★★
+        $progress = ($y - $gradient_start_y) / $gradient_height; // 0.0 〜 1.0
+        
+        // 上部（progress = 0）は透明（元画像が見える）
+        // 下部（progress = 1）は不透明（白地で覆われる）
+        $alpha = intval($progress * 127); // 0（透明） → 127（不透明）
+        
+        // 白色の半透明色を作成
+        $gradient_color = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127 - $alpha);
+        
+        // 水平線を描画してグラデーション効果を作成
+        imageline($thumbnail_image, 0, $y, $thumb_width - 1, $y, $gradient_color);
+    }
+    
+    // アルファブレンディングを無効にして透明度を保持
+    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
+        imagealphablending($thumbnail_image, false);
+        imagesavealpha($thumbnail_image, true);
+    }
+    
+    $result = false;
+    switch ($mime_type) {
+        case 'image/jpeg':
+            $result = imagejpeg($thumbnail_image, $thumbnail_path, $quality);
+            break;
+        case 'image/png':
+            $result = imagepng($thumbnail_image, $thumbnail_path, 9);
+            break;
+        case 'image/gif':
+            $result = imagegif($thumbnail_image, $thumbnail_path);
+            break;
+        case 'image/webp':
+            if (function_exists('imagewebp')) {
+                $result = imagewebp($thumbnail_image, $thumbnail_path, $quality);
+            }
+            break;
+    }
+    
+    imagedestroy($source_image);
+    imagedestroy($thumbnail_image);
+    
+    if ($result) {
+        error_log("Thumbnail with correct gradient successfully generated: " . $thumbnail_path);
+    } else {
+        error_log("Failed to save thumbnail with correct gradient: " . $thumbnail_path);
+    }
+    
+    return $result;
+}
+
+// ★★★ 縦長画像検出関数 ★★★
+function isVerticalImage($image_path, $vertical_threshold = 1.5) {
+    $image_info = getimagesize($image_path);
+    if (!$image_info) {
+        return false;
+    }
+    
+    $width = $image_info[0];
+    $height = $image_info[1];
+    $aspect_ratio = $height / $width;
+    
+    return $aspect_ratio >= $vertical_threshold;
+}
+
+// ★★★ 既存のリサイズ関数 ★★★
+function resizeImageWithDualConstraints($source_path, $destination_path, $max_width = 1000, $max_height = 3000, $quality = 85) {
+    $image_info = getimagesize($source_path);
+    if (!$image_info) {
+        return false;
+    }
+    
+    $original_width = $image_info[0];
+    $original_height = $image_info[1];
+    $mime_type = $image_info['mime'];
+    
+    $needs_resize = false;
+    $new_width = $original_width;
+    $new_height = $original_height;
+    
+    $width_ratio = ($original_width > $max_width) ? ($max_width / $original_width) : 1.0;
+    $height_ratio = ($original_height > $max_height) ? ($max_height / $original_height) : 1.0;
+    $resize_ratio = min($width_ratio, $height_ratio);
+    
+    if ($resize_ratio < 1.0) {
+        $new_width = intval($original_width * $resize_ratio);
+        $new_height = intval($original_height * $resize_ratio);
+        $needs_resize = true;
+        error_log("Image resize: {$original_width}x{$original_height} -> {$new_width}x{$new_height} (ratio: {$resize_ratio})");
+    }
+    
+    if (!$needs_resize) {
+        error_log("No resize needed: {$original_width}x{$original_height}");
+        return move_uploaded_file($source_path, $destination_path);
+    }
+    
+    $source_image = null;
+    switch ($mime_type) {
+        case 'image/jpeg':
+            $source_image = imagecreatefromjpeg($source_path);
+            break;
+        case 'image/png':
+            $source_image = imagecreatefrompng($source_path);
+            break;
+        case 'image/gif':
+            $source_image = imagecreatefromgif($source_path);
+            break;
+        case 'image/webp':
+            if (function_exists('imagecreatefromwebp')) {
+                $source_image = imagecreatefromwebp($source_path);
+            }
+            break;
+    }
+    
+    if (!$source_image) {
+        error_log("Failed to create source image from: " . $mime_type);
+        return false;
+    }
+    
+    $new_image = imagecreatetruecolor($new_width, $new_height);
+    
+    if ($mime_type === 'image/png' || $mime_
