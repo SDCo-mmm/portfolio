@@ -10,11 +10,66 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // ★★★ モーダル機能の初期化 ★★★
+  const initializeModal = () => {
+    // 既存のモーダルがあれば削除
+    const existingModal = document.getElementById('imageModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+
+    // モーダル要素を作成
+    const modal = document.createElement('div');
+    modal.id = 'imageModal';
+    modal.className = 'image-modal';
+    modal.innerHTML = `
+      <span class="close">&times;</span>
+      <img id="modalImage" src="" alt="">
+      <div class="modal-caption" id="modalCaption"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalImg = document.getElementById('modalImage');
+    const modalCaption = document.getElementById('modalCaption');
+    const closeBtn = modal.querySelector('.close');
+
+    // モーダルを表示する関数
+    window.showImageModal = (imageSrc, caption) => {
+      modalImg.src = imageSrc;
+      modalCaption.textContent = caption || '';
+      modalCaption.style.display = caption ? 'block' : 'none';
+      modal.classList.add('show');
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden'; // スクロール無効化
+    };
+
+    // モーダルを閉じる関数
+    const closeModal = () => {
+      modal.classList.remove('show');
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto'; // スクロール有効化
+    };
+
+    // イベントリスナー設定
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // ESCキーでモーダルを閉じる
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        closeModal();
+      }
+    });
+  };
+
   // 投稿データを取得
   const fetchPostDetail = async () => {
     postDetailContainer.innerHTML = "<p>作品詳細を読み込み中...</p>";
     try {
-      // APIパス修正済み: /portfolio/api/get_posts.php
       const response = await fetch(`/portfolio/api/get_posts.php`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -26,6 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (post) {
         displayPostDetail(post);
+        initializeModal(); // モーダル機能を初期化
       } else {
         postDetailContainer.innerHTML = "<p>指定された作品が見つかりません。</p>";
       }
@@ -35,14 +91,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // 投稿詳細を表示する関数
+  // ★★★ 投稿詳細を表示する関数（サムネイル対応） ★★★
   const displayPostDetail = (post) => {
-    const galleryHtml = post.gallery_images.map(image => `
-      <div class="gallery-item">
-        <img src="${image.path}" alt="${image.caption || post.title}" loading="lazy">
-        ${image.caption ? `<p>${image.caption}</p>` : ''}
-      </div>
-    `).join('');
+    const galleryHtml = post.gallery_images.map(image => {
+      // ★★★ 縦長画像の場合はサムネイルを表示、そうでなければオリジナルを表示 ★★★
+      const displaySrc = image.is_vertical && image.thumbnail ? image.thumbnail : image.path;
+      const isVertical = image.is_vertical || false;
+      
+      return `
+        <div class="gallery-item" data-vertical="${isVertical}">
+          <img 
+            src="${displaySrc}" 
+            alt="${image.caption || post.title}" 
+            loading="lazy"
+            ${isVertical ? `onclick="showImageModal('${image.path}', '${image.caption || ''}')"` : ''}
+            data-original="${image.path}"
+            data-caption="${image.caption || ''}"
+          >
+          ${image.caption ? `<p>${image.caption}</p>` : ''}
+        </div>
+      `;
+    }).join('');
 
     postDetailContainer.innerHTML = `
       <div class="post-detail-content">
@@ -60,6 +129,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
       </div>
     `;
+
+    // ★★★ 縦長画像以外でもクリック可能にする（オプション） ★★★
+    const allImages = postDetailContainer.querySelectorAll('.gallery-item img');
+    allImages.forEach(img => {
+      if (!img.getAttribute('onclick')) {
+        // 縦長画像でない場合でも、クリックで拡大表示可能
+        img.style.cursor = 'pointer';
+        img.addEventListener('click', () => {
+          const originalSrc = img.getAttribute('data-original') || img.src;
+          const caption = img.getAttribute('data-caption') || img.alt;
+          showImageModal(originalSrc, caption);
+        });
+      }
+    });
   };
 
   // 初期ロード
