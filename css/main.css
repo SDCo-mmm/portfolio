@@ -228,6 +228,7 @@ main {
   padding: 50px 0;
   text-align: center;
   border-bottom: 1px solid #e5e5e5;
+  position: relative;
 }
 
 .gallery-item:last-child {
@@ -274,21 +275,48 @@ main {
 }
 
 /* ★★★ 縦長画像専用のスタイル ★★★ */
-.gallery-item[data-aspect="vertical"] {
+.gallery-item[data-vertical="true"] {
   padding: 30px 0;
 }
 
-.gallery-item[data-aspect="vertical"] img {
-  max-height: 70vh;
+.gallery-item[data-vertical="true"] img {
+  max-height: 60vh; /* 縦長画像はさらに制限 */
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.gallery-item[data-aspect="vertical"] img:hover {
+.gallery-item[data-vertical="true"] img:hover {
   transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
 
-/* ★★★ 縦長画像用のモーダル表示 ★★★ */
+/* ★★★ 縦長画像のサムネイル表示アイコン ★★★ */
+.gallery-item[data-vertical="true"]::after {
+  content: "🔍 クリックで拡大";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0,0,0,0.8);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
+}
+
+.gallery-item[data-vertical="true"]:hover::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+/* ★★★ モーダル表示スタイル ★★★ */
 .image-modal {
   display: none;
   position: fixed;
@@ -299,16 +327,22 @@ main {
   height: 100%;
   background-color: rgba(0,0,0,0.9);
   cursor: pointer;
+  animation: fadeIn 0.3s ease;
+}
+
+.image-modal.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .image-modal img {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   max-width: 90vw;
   max-height: 90vh;
   object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: zoomIn 0.3s ease;
 }
 
 .image-modal .close {
@@ -319,6 +353,75 @@ main {
   font-size: 40px;
   font-weight: bold;
   cursor: pointer;
+  transition: color 0.3s ease;
+  z-index: 1001;
+}
+
+.image-modal .close:hover {
+  color: #ccc;
+}
+
+.image-modal .modal-caption {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  background-color: rgba(0,0,0,0.7);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  max-width: 80%;
+  text-align: center;
+}
+
+/* ★★★ モーダルアニメーション ★★★ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+/* ★★★ モバイル向けモーダル調整 ★★★ */
+@media (max-width: 768px) {
+  .image-modal img {
+    max-width: 95vw;
+    max-height: 85vh;
+  }
+  
+  .image-modal .close {
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+  }
+  
+  .image-modal .modal-caption {
+    bottom: 20px;
+    font-size: 0.8rem;
+    max-width: 90%;
+    padding: 8px 15px;
+  }
+  
+  .gallery-item[data-vertical="true"]::after {
+    content: "🔍 タップで拡大";
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 16px;
+  }
+  
+  .gallery-item[data-vertical="true"]:hover::after {
+    transform: translate(-50%, -50%) scale(1.02);
+  }
 }
 
 /* レスポンシブ対応 (詳細ページ) */
@@ -353,7 +456,7 @@ main {
   .gallery-item img {
     max-height: 60vh; /* モバイルでは制限をさらに厳しく */
   }
-  .gallery-item[data-aspect="vertical"] img {
+  .gallery-item[data-vertical="true"] img {
     max-height: 50vh;
   }
   .gallery-item p {
