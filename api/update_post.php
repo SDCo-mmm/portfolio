@@ -1,5 +1,5 @@
 <?php
-// update_post.php - 既存投稿の更新と画像アップロード/削除（修正版リサイズ機能付き）
+// update_post.php - 既存投稿の更新と画像アップロード/削除（サムネイル生成機能付き）
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
@@ -8,21 +8,20 @@ header('Content-Type: application/json; charset=UTF-8');
 
 // POSTリクエスト以外は拒否
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405); // Method Not Allowed
+    http_response_code(405);
     echo json_encode(["status" => "error", "message" => "Method Not Allowed"]);
     exit();
 }
 
 // 認証チェック
 if (!isset($_COOKIE['admin_auth_token']) || $_COOKIE['admin_auth_token'] !== 'authenticated_admin') {
-    http_response_code(401); // Unauthorized
+    http_response_code(401);
     echo json_encode(["status" => "error", "message" => "Authentication required."]);
     exit();
 }
 
-// ★★★ 修正版：縦横両方制限対応リサイズ関数 ★★★
-function resizeImageWithDualConstraints($source_path, $destination_path, $max_width = 1000, $max_height = 3000, $quality = 85) {
-    // 画像情報を取得
+// ★★★ サムネイル生成関数（グラデーション付き） ★★★
+function generateThumbnail($source_path, $thumbnail_path, $thumb_width = 600, $thumb_height = 450, $quality = 85) {
     $image_info = getimagesize($source_path);
     if (!$image_info) {
         return false;
@@ -32,37 +31,168 @@ function resizeImageWithDualConstraints($source_path, $destination_path, $max_wi
     $original_height = $image_info[1];
     $mime_type = $image_info['mime'];
     
-    // ★★★ 重要：両方の制限を同時にチェックして、より厳しい制限を適用 ★★★
+    $source_image = null;
+    switch ($mime_type) {
+        case 'image/jpeg':
+            $source_image = imagecreatefromjpeg($source_path);
+            break;
+        case 'image/png':
+            $source_image = imagecreatefrompng($source_path);
+            break;
+        case 'image/gif':
+            $source_image = imagecreatefromgif($source_path);
+            break;
+        case 'image/webp':
+            if (function_exists('imagecreatefromwebp')) {
+                $source_image = imagecreatefromwebp($source_path);
+            }
+            break;
+    }
+    
+    if (!$source_image) {
+        error_log("Failed to create source image for thumbnail: " . $mime_type);
+        return false;
+    }
+    
+    $thumbnail_image = imagecreatetruecolor($thumb_width, $thumb_height);
+    
+    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
+        imagealphablending($thumbnail_image, false);
+        imagesavealpha($thumbnail_image, true);
+        $transparent = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127);
+        imagefilledrectangle($thumbnail_image, 0, 0, $thumb_width, $thumb_height, $transparent);
+    }
+    
+    $thumb_ratio = $thumb_width / $thumb_height;
+    $original_ratio = $original_width / $original_height;
+    
+    if ($original_ratio > $thumb_ratio) {
+        $crop_height = $original_height;
+        $crop_width = $original_height * $thumb_ratio;
+        $crop_x = ($original_width - $crop_width) / 2;
+        $crop_y = 0;
+    } else {
+        $crop_width = $original_width;
+        $crop_height = $original_width / $thumb_ratio;
+        $crop_x = 0;
+        $crop_y = 0; // 上部から切り取り
+    }
+    
+    $resize_success = imagecopyresampled(
+        $thumbnail_image, $source_image,
+        0, 0,
+        $crop_x, $crop_y,
+        $thumb_width, $thumb_height,
+        $crop_width, $crop_height
+    );
+    
+    if (!$resize_success) {
+        error_log("imagecopyresampled failed for thumbnail");
+        imagedestroy($source_image);
+        imagedestroy($thumbnail_image);
+        return false;
+    }
+    
+    // ★★★ 下部透過グラデーション効果を追加 ★★★
+    $gradient_height = intval($thumb_height * 0.25); // 画像の下25%にグラデーション
+    $gradient_start_y = $thumb_height - $gradient_height;
+    
+    // アルファブレンディングを有効にしてグラデーション描画
+    imagealphablending($thumbnail_image, true);
+    
+    for ($y = $gradient_start_y; $y < $thumb_height; $y++) {
+        // グラデーションの透明度を計算（0-100の範囲）
+        $progress = ($y - $gradient_start_y) / $gradient_height;
+        $alpha = intval($progress * 100); // 0（完全不透明）から100（ほぼ透明）
+        
+        // 白色の半透明色を作成（実際には元の色を薄くする効果）
+        $gradient_color = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, $alpha);
+        
+        // 水平線を描画してグラデーション効果を作成
+        imageline($thumbnail_image, 0, $y, $thumb_width - 1, $y, $gradient_color);
+    }
+    
+    // アルファブレンディングを無効にして透明度を保持
+    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
+        imagealphablending($thumbnail_image, false);
+        imagesavealpha($thumbnail_image, true);
+    }
+    
+    $result = false;
+    switch ($mime_type) {
+        case 'image/jpeg':
+            $result = imagejpeg($thumbnail_image, $thumbnail_path, $quality);
+            break;
+        case 'image/png':
+            $result = imagepng($thumbnail_image, $thumbnail_path, 9);
+            break;
+        case 'image/gif':
+            $result = imagegif($thumbnail_image, $thumbnail_path);
+            break;
+        case 'image/webp':
+            if (function_exists('imagewebp')) {
+                $result = imagewebp($thumbnail_image, $thumbnail_path, $quality);
+            }
+            break;
+    }
+    
+    imagedestroy($source_image);
+    imagedestroy($thumbnail_image);
+    
+    if ($result) {
+        error_log("Thumbnail with gradient successfully generated: " . $thumbnail_path);
+    } else {
+        error_log("Failed to save thumbnail with gradient: " . $thumbnail_path);
+    }
+    
+    return $result;
+}
+
+// ★★★ 縦長画像検出関数 ★★★
+function isVerticalImage($image_path, $vertical_threshold = 1.5) {
+    $image_info = getimagesize($image_path);
+    if (!$image_info) {
+        return false;
+    }
+    
+    $width = $image_info[0];
+    $height = $image_info[1];
+    $aspect_ratio = $height / $width;
+    
+    return $aspect_ratio >= $vertical_threshold;
+}
+
+// ★★★ 既存のリサイズ関数 ★★★
+function resizeImageWithDualConstraints($source_path, $destination_path, $max_width = 1000, $max_height = 3000, $quality = 85) {
+    $image_info = getimagesize($source_path);
+    if (!$image_info) {
+        return false;
+    }
+    
+    $original_width = $image_info[0];
+    $original_height = $image_info[1];
+    $mime_type = $image_info['mime'];
+    
     $needs_resize = false;
     $new_width = $original_width;
     $new_height = $original_height;
     
-    // 横幅制限による縮小比率を計算
     $width_ratio = ($original_width > $max_width) ? ($max_width / $original_width) : 1.0;
-    
-    // 縦幅制限による縮小比率を計算
     $height_ratio = ($original_height > $max_height) ? ($max_height / $original_height) : 1.0;
-    
-    // ★★★ より厳しい制限（小さい比率）を採用 ★★★
     $resize_ratio = min($width_ratio, $height_ratio);
     
-    // リサイズが必要かチェック
     if ($resize_ratio < 1.0) {
         $new_width = intval($original_width * $resize_ratio);
         $new_height = intval($original_height * $resize_ratio);
         $needs_resize = true;
-        
-        // デバッグ情報をログに出力
         error_log("Image resize: {$original_width}x{$original_height} -> {$new_width}x{$new_height} (ratio: {$resize_ratio})");
     }
     
-    // リサイズが不要な場合はそのまま移動
     if (!$needs_resize) {
         error_log("No resize needed: {$original_width}x{$original_height}");
         return move_uploaded_file($source_path, $destination_path);
     }
     
-    // 元画像をロード
     $source_image = null;
     switch ($mime_type) {
         case 'image/jpeg':
@@ -88,7 +218,6 @@ function resizeImageWithDualConstraints($source_path, $destination_path, $max_wi
     
     $new_image = imagecreatetruecolor($new_width, $new_height);
     
-    // 透明度保持
     if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
         imagealphablending($new_image, false);
         imagesavealpha($new_image, true);
@@ -96,7 +225,6 @@ function resizeImageWithDualConstraints($source_path, $destination_path, $max_wi
         imagefilledrectangle($new_image, 0, 0, $new_width, $new_height, $transparent);
     }
     
-    // リサイズ実行
     $resize_success = imagecopyresampled($new_image, $source_image, 0, 0, 0, 0, $new_width, $new_height, $original_width, $original_height);
     
     if (!$resize_success) {
@@ -106,7 +234,6 @@ function resizeImageWithDualConstraints($source_path, $destination_path, $max_wi
         return false;
     }
     
-    // 保存
     $result = false;
     switch ($mime_type) {
         case 'image/jpeg':
@@ -125,7 +252,6 @@ function resizeImageWithDualConstraints($source_path, $destination_path, $max_wi
             break;
     }
     
-    // メモリ解放
     imagedestroy($source_image);
     imagedestroy($new_image);
     
@@ -143,6 +269,10 @@ $posts_file = __DIR__ . '/../data/posts.json';
 $upload_base_dir = __DIR__ . '/../upload/';
 $client_logo_dir = $upload_base_dir . 'client/';
 $works_images_dir = $upload_base_dir . 'works/';
+$thumbnails_dir = $upload_base_dir . 'thumbnails/'; // ★新規
+
+// サムネイルディレクトリが存在しない場合は作成
+if (!is_dir($thumbnails_dir)) mkdir($thumbnails_dir, 0755, true);
 
 // posts.json を読み込み
 $posts = [];
@@ -182,9 +312,8 @@ if ($current_post_index === -1) {
 $existing_client_logo_path = $posts[$current_post_index]['client_logo'] ?? null;
 $client_logo_path = $existing_client_logo_path;
 
-// クライアントロゴの処理（修正版リサイズ対応）
+// クライアントロゴの処理
 if ($client_logo_removed) {
-    // ロゴ削除の場合
     if ($existing_client_logo_path) {
         $old_logo_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $existing_client_logo_path);
         if (file_exists($old_logo_filepath)) {
@@ -193,7 +322,6 @@ if ($client_logo_removed) {
     }
     $client_logo_path = null;
 } elseif (isset($_FILES['client_logo']) && $_FILES['client_logo']['error'] === UPLOAD_ERR_OK) {
-    // 新しいロゴアップロードの場合
     if ($existing_client_logo_path) {
         $old_logo_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $existing_client_logo_path);
         if (file_exists($old_logo_filepath)) {
@@ -210,7 +338,6 @@ if ($client_logo_removed) {
         $logo_filename = $post_id . '_client_' . time() . '.' . $file_ext;
         $destination = $client_logo_dir . $logo_filename;
         
-        // ★★★ 修正版リサイズ機能を使用 ★★★
         if (resizeImageWithDualConstraints($file_info['tmp_name'], $destination, 1000, 3000, 85)) {
             $client_logo_path = '/portfolio/upload/client/' . $logo_filename;
         } else {
@@ -220,11 +347,10 @@ if ($client_logo_removed) {
         error_log("Invalid client logo file type: " . $file_info['name']);
     }
 } elseif ($client_logo_unchanged) {
-    // ロゴを変更しない場合は既存のパスを保持
     $client_logo_path = $existing_client_logo_path;
 }
 
-// ギャラリー画像の処理
+// ★★★ ギャラリー画像の処理（サムネイル対応） ★★★
 $new_gallery_images_data = [];
 $existing_gallery_images = $posts[$current_post_index]['gallery_images'] ?? [];
 
@@ -242,6 +368,8 @@ foreach ($existing_gallery_images as $existing_image) {
         $caption = $existing_captions[$path_index] ?? $existing_image['caption'];
         $new_gallery_images_data[] = [
             "path" => $image_path,
+            "thumbnail" => $existing_image['thumbnail'] ?? null, // ★既存サムネイルを保持
+            "is_vertical" => $existing_image['is_vertical'] ?? false, // ★既存フラグを保持
             "caption" => $caption
         ];
     } else {
@@ -250,21 +378,39 @@ foreach ($existing_gallery_images as $existing_image) {
         if (file_exists($old_image_filepath)) {
             unlink($old_image_filepath);
         }
+        
+        // ★サムネイルも削除
+        if (!empty($existing_image['thumbnail'])) {
+            $old_thumbnail_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $existing_image['thumbnail']);
+            if (file_exists($old_thumbnail_filepath)) {
+                unlink($old_thumbnail_filepath);
+            }
+        }
     }
 }
 
-// 既存画像の変更（ファイル再アップロード）の処理（修正版リサイズ対応）
+// 既存画像の変更（ファイル再アップロード）の処理
 if (isset($_FILES['existing_gallery_images'])) {
     foreach ($_FILES['existing_gallery_images']['error'] as $key => $error) {
         if ($error === UPLOAD_ERR_OK) {
-            // 既存画像の対応するパスを取得
             $old_path = $existing_paths[$key] ?? '';
             
-            // 古い画像ファイルを削除
+            // 古い画像ファイルとサムネイルを削除
             if ($old_path) {
                 $old_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $old_path);
                 if (file_exists($old_filepath)) {
                     unlink($old_filepath);
+                }
+                
+                // ★古いサムネイルも削除
+                foreach ($existing_gallery_images as $existing_img) {
+                    if ($existing_img['path'] === $old_path && !empty($existing_img['thumbnail'])) {
+                        $old_thumb_filepath = $upload_base_dir . str_replace('/portfolio/upload/', '', $existing_img['thumbnail']);
+                        if (file_exists($old_thumb_filepath)) {
+                            unlink($old_thumb_filepath);
+                        }
+                        break;
+                    }
                 }
             }
             
@@ -284,14 +430,28 @@ if (isset($_FILES['existing_gallery_images'])) {
                 $image_filename = $post_id . '_work_' . time() . '_' . uniqid() . '.' . $file_ext;
                 $destination = $works_images_dir . $image_filename;
                 
-                // ★★★ 修正版リサイズ機能を使用 ★★★
                 if (resizeImageWithDualConstraints($file_info['tmp_name'], $destination, 1000, 3000, 85)) {
                     $caption = $existing_captions[$key] ?? '';
+                    
+                    // ★★★ 縦長画像の場合はサムネイルを生成 ★★★
+                    $thumbnail_path = null;
+                    $is_vertical = isVerticalImage($destination);
+                    
+                    if ($is_vertical) {
+                        $thumbnail_filename = 'thumb_' . $image_filename;
+                        $thumbnail_destination = $thumbnails_dir . $thumbnail_filename;
+                        
+                        if (generateThumbnail($destination, $thumbnail_destination)) {
+                            $thumbnail_path = '/portfolio/upload/thumbnails/' . $thumbnail_filename;
+                        }
+                    }
                     
                     // 配列内の対応する要素を更新
                     foreach ($new_gallery_images_data as &$gallery_item) {
                         if ($gallery_item['path'] === $old_path) {
                             $gallery_item['path'] = '/portfolio/upload/works/' . $image_filename;
+                            $gallery_item['thumbnail'] = $thumbnail_path;
+                            $gallery_item['is_vertical'] = $is_vertical;
                             $gallery_item['caption'] = $caption;
                             break;
                         }
@@ -302,7 +462,7 @@ if (isset($_FILES['existing_gallery_images'])) {
     }
 }
 
-// 新規ギャラリー画像の追加（修正版リサイズ対応）
+// 新規ギャラリー画像の追加
 if (isset($_FILES['gallery_images'])) {
     $gallery_captions = $_POST['gallery_captions'] ?? [];
     
@@ -324,11 +484,26 @@ if (isset($_FILES['gallery_images'])) {
                 $image_filename = $post_id . '_work_' . time() . '_' . uniqid() . '.' . $file_ext;
                 $destination = $works_images_dir . $image_filename;
                 
-                // ★★★ 修正版リサイズ機能を使用 ★★★
                 if (resizeImageWithDualConstraints($file_info['tmp_name'], $destination, 1000, 3000, 85)) {
                     $caption = $gallery_captions[$key] ?? '';
+                    
+                    // ★★★ 縦長画像の場合はサムネイルを生成 ★★★
+                    $thumbnail_path = null;
+                    $is_vertical = isVerticalImage($destination);
+                    
+                    if ($is_vertical) {
+                        $thumbnail_filename = 'thumb_' . $image_filename;
+                        $thumbnail_destination = $thumbnails_dir . $thumbnail_filename;
+                        
+                        if (generateThumbnail($destination, $thumbnail_destination)) {
+                            $thumbnail_path = '/portfolio/upload/thumbnails/' . $thumbnail_filename;
+                        }
+                    }
+                    
                     $new_gallery_images_data[] = [
                         "path" => '/portfolio/upload/works/' . $image_filename,
+                        "thumbnail" => $thumbnail_path,
+                        "is_vertical" => $is_vertical,
                         "caption" => $caption
                     ];
                 }
