@@ -7,25 +7,209 @@ document.addEventListener("DOMContentLoaded", () => {
   const formTitle = document.getElementById("formTitle");
   const formMessage = document.getElementById("formMessage");
   
-  // クライアントロゴ削除ボタンの追加 (新機能)
+  // ★★★ タグ入力関連の要素 ★★★
+  const tagInputContainer = document.getElementById("tagInputContainer");
+  const tagInputField = document.getElementById("tagInputField");
+  const tagSuggestions = document.getElementById("tagSuggestions");
+  
+  let currentTags = []; // 現在選択されているタグ
+  let availableTags = []; // 利用可能なタグ一覧
+  let suggestionIndex = -1; // キーボード操作用のインデックス
+  
+  // クライアントロゴ削除ボタンの追加
   const clientLogoRemoveBtn = document.createElement('button');
   clientLogoRemoveBtn.type = 'button';
   clientLogoRemoveBtn.classList.add('remove-button');
   clientLogoRemoveBtn.textContent = 'ロゴ削除';
-  clientLogoRemoveBtn.style.display = 'none'; // 初期状態では非表示
+  clientLogoRemoveBtn.style.display = 'none';
   clientLogoInput.parentNode.insertBefore(clientLogoRemoveBtn, clientLogoPreview.nextSibling);
 
-  // URLからIDを取得 (編集モードの場合)
+  // URLからIDを取得
   const urlParams = new URLSearchParams(window.location.search);
   const postId = urlParams.get('id');
 
-  // 編集モードの場合、既存の投稿データを保持する隠しフィールド
   let existingPostData = null; 
-  let clientLogoDeleted = false; // クライアントロゴが削除されたかどうかのフラグ
+  let clientLogoDeleted = false;
+
+  // ★★★ 利用可能なタグを取得する関数 ★★★
+  const fetchAvailableTags = async () => {
+    try {
+      const response = await fetch("/portfolio/api/get_posts.php");
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const posts = await response.json();
+      const tagSet = new Set();
+      
+      posts.forEach(post => {
+        if (post.tags && Array.isArray(post.tags)) {
+          post.tags.forEach(tag => tagSet.add(tag));
+        }
+      });
+      
+      availableTags = Array.from(tagSet).sort();
+    } catch (error) {
+      console.error("タグデータの取得に失敗:", error);
+      availableTags = [];
+    }
+  };
+
+  // ★★★ タグ入力UIの更新 ★★★
+  const updateTagInputUI = () => {
+    // 既存のタグ表示をクリア
+    const existingTags = tagInputContainer.querySelectorAll('.tag-item');
+    existingTags.forEach(tag => tag.remove());
+    
+    // 現在のタグを表示
+    currentTags.forEach((tag, index) => {
+      const tagElement = document.createElement('div');
+      tagElement.className = 'tag-item';
+      tagElement.innerHTML = `
+        <span>${tag}</span>
+        <button type="button" class="remove-tag" data-index="${index}">&times;</button>
+      `;
+      
+      // 削除ボタンのイベントリスナー
+      tagElement.querySelector('.remove-tag').addEventListener('click', () => {
+        removeTag(index);
+      });
+      
+      tagInputContainer.insertBefore(tagElement, tagInputField);
+    });
+    
+    // フォームデータ用のhidden inputを更新
+    updateTagsHiddenInput();
+  };
+
+  // ★★★ タグ削除 ★★★
+  const removeTag = (index) => {
+    currentTags.splice(index, 1);
+    updateTagInputUI();
+  };
+
+  // ★★★ タグ追加 ★★★
+  const addTag = (tag) => {
+    const trimmedTag = tag.trim();
+    if (trimmedTag && !currentTags.includes(trimmedTag)) {
+      currentTags.push(trimmedTag);
+      updateTagInputUI();
+      tagInputField.value = '';
+      hideSuggestions();
+    }
+  };
+
+  // ★★★ サジェスト機能 ★★★
+  const showSuggestions = (inputValue) => {
+    const filtered = availableTags.filter(tag => 
+      tag.toLowerCase().includes(inputValue.toLowerCase()) && 
+      !currentTags.includes(tag)
+    );
+    
+    if (filtered.length === 0) {
+      hideSuggestions();
+      return;
+    }
+    
+    tagSuggestions.innerHTML = filtered.map((tag, index) => 
+      `<div class="tag-suggestion-item" data-tag="${tag}" data-index="${index}">${tag}</div>`
+    ).join('');
+    
+    tagSuggestions.style.display = 'block';
+    suggestionIndex = -1;
+    
+    // サジェスト項目のクリックイベント
+    tagSuggestions.querySelectorAll('.tag-suggestion-item').forEach(item => {
+      item.addEventListener('click', () => {
+        addTag(item.dataset.tag);
+      });
+    });
+  };
+
+  const hideSuggestions = () => {
+    tagSuggestions.style.display = 'none';
+    suggestionIndex = -1;
+  };
+
+  // ★★★ hidden inputの更新 ★★★
+  const updateTagsHiddenInput = () => {
+    let hiddenInput = document.getElementById('tagsHiddenInput');
+    if (!hiddenInput) {
+      hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = 'tags';
+      hiddenInput.id = 'tagsHiddenInput';
+      postForm.appendChild(hiddenInput);
+    }
+    hiddenInput.value = JSON.stringify(currentTags);
+  };
+
+  // ★★★ タグ入力フィールドのイベントリスナー ★★★
+  tagInputField.addEventListener('input', (e) => {
+    const inputValue = e.target.value;
+    if (inputValue.trim()) {
+      showSuggestions(inputValue);
+    } else {
+      hideSuggestions();
+    }
+  });
+
+  tagInputField.addEventListener('keydown', (e) => {
+    const suggestions = tagSuggestions.querySelectorAll('.tag-suggestion-item');
+    
+    switch(e.key) {
+      case 'Enter':
+        e.preventDefault();
+        if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+          addTag(suggestions[suggestionIndex].dataset.tag);
+        } else if (tagInputField.value.trim()) {
+          addTag(tagInputField.value);
+        }
+        break;
+        
+      case 'ArrowDown':
+        e.preventDefault();
+        if (suggestions.length > 0) {
+          suggestionIndex = Math.min(suggestionIndex + 1, suggestions.length - 1);
+          updateSuggestionHighlight(suggestions);
+        }
+        break;
+        
+      case 'ArrowUp':
+        e.preventDefault();
+        if (suggestions.length > 0) {
+          suggestionIndex = Math.max(suggestionIndex - 1, -1);
+          updateSuggestionHighlight(suggestions);
+        }
+        break;
+        
+      case 'Escape':
+        hideSuggestions();
+        break;
+        
+      case 'Backspace':
+        if (tagInputField.value === '' && currentTags.length > 0) {
+          removeTag(currentTags.length - 1);
+        }
+        break;
+    }
+  });
+
+  // サジェストハイライトの更新
+  const updateSuggestionHighlight = (suggestions) => {
+    suggestions.forEach((item, index) => {
+      item.classList.toggle('active', index === suggestionIndex);
+    });
+  };
+
+  // クリック時にサジェストを隠す
+  document.addEventListener('click', (e) => {
+    if (!tagInputContainer.contains(e.target) && !tagSuggestions.contains(e.target)) {
+      hideSuggestions();
+    }
+  });
 
   // 画像プレビュー表示関数
   const setupImagePreview = (fileInput, previewContainer, initialImageUrl = null) => {
-    previewContainer.innerHTML = ''; // まずクリア
+    previewContainer.innerHTML = '';
 
     if (initialImageUrl) {
       const img = document.createElement("img");
@@ -55,13 +239,12 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         reader.readAsDataURL(file);
       }
-      // ファイルが選択されたらロゴ削除ボタンを非表示
       clientLogoRemoveBtn.style.display = 'none';
-      clientLogoDeleted = false; // 削除フラグをリセット
+      clientLogoDeleted = false;
     });
   };
 
-  // クライアントロゴのプレビュー設定（初期表示時）
+  // クライアントロゴのプレビュー設定
   setupImagePreview(clientLogoInput, clientLogoPreview);
 
   // ギャラリー画像追加ボタンのイベントリスナー
@@ -71,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     let hiddenInputHtml = '';
     if (isExisting && initialImagePath) {
-      // 既存の画像のパスを保持するhiddenフィールド
       hiddenInputHtml = `<input type="hidden" name="existing_gallery_paths[]" value="${initialImagePath}" />`;
     }
 
@@ -84,38 +266,38 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     galleryImagesContainer.appendChild(newItem);
 
-    // 新しく追加された画像入力フィールドのプレビュー設定
     const newFileInput = newItem.querySelector('input[type="file"]');
     const newPreviewContainer = newItem.querySelector('.image-preview');
     setupImagePreview(newFileInput, newPreviewContainer, initialImagePath);
 
-    // 削除ボタンのイベントリスナー
     newItem.querySelector(".remove-gallery-image-btn").addEventListener("click", () => {
       newItem.remove();
     });
   };
 
   addGalleryImageBtn.addEventListener("click", () => {
-    addGalleryImageField(null, '', false); // 新規追加なのでisExistingはfalse
+    addGalleryImageField(null, '', false);
   });
 
   // クライアントロゴ削除ボタンのイベントリスナー
   clientLogoRemoveBtn.addEventListener('click', () => {
-    clientLogoPreview.innerHTML = ''; // プレビューをクリア
-    clientLogoInput.value = ''; // ファイル入力をクリア
-    clientLogoRemoveBtn.style.display = 'none'; // ボタンを隠す
-    clientLogoDeleted = true; // 削除フラグを立てる
+    clientLogoPreview.innerHTML = '';
+    clientLogoInput.value = '';
+    clientLogoRemoveBtn.style.display = 'none';
+    clientLogoDeleted = true;
   });
 
   // フォーム送信時の処理
   postForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     formMessage.style.display = 'none';
-    formMessage.className = 'form-message'; // クラスをリセット
+    formMessage.className = 'form-message';
+
+    // フォーム送信前にタグデータを更新
+    updateTagsHiddenInput();
 
     const formData = new FormData(postForm);
     
-    // クライアントロゴの処理
     if (clientLogoDeleted) {
       formData.append('client_logo_removed', 'true');
     } else if (!clientLogoInput.files.length && existingPostData && existingPostData.client_logo) {
@@ -125,11 +307,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let apiEndpoint = '';
     let successMessage = '';
     if (postId) {
-      apiEndpoint = "/portfolio/api/update_post.php"; // 編集API
-      formData.append('id', postId); // 投稿IDを追加
+      apiEndpoint = "/portfolio/api/update_post.php";
+      formData.append('id', postId);
       successMessage = "投稿が正常に更新されました！";
     } else {
-      apiEndpoint = "/portfolio/api/post_upload.php"; // 新規作成API
+      apiEndpoint = "/portfolio/api/post_upload.php";
       successMessage = "投稿が正常に保存されました！";
     }
 
@@ -146,17 +328,18 @@ document.addEventListener("DOMContentLoaded", () => {
         formMessage.classList.add('success');
         formMessage.style.display = 'block';
         
-        // 新規作成の場合、フォームをリセット
         if (!postId) {
             postForm.reset();
             clientLogoPreview.innerHTML = '';
             galleryImagesContainer.innerHTML = '';
-            addGalleryImageField(); // 最初のギャラリー画像フィールドを再追加
+            currentTags = [];
+            updateTagInputUI();
+            addGalleryImageField();
         }
-        // 成功後、一覧ページへリダイレクト
+        
         setTimeout(() => {
           window.location.href = "/portfolio/admin/index.html";
-        }, 1500); // 1.5秒後にリダイレクト
+        }, 1500);
       } else {
         formMessage.textContent = `エラー: ${result.message}`;
         formMessage.classList.add('error');
@@ -170,41 +353,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // 編集モード時のデータ読み込みロジック
+  // ★★★ 編集モード時のデータ読み込み（タグ対応） ★★★
   if (postId) {
     formTitle.textContent = "投稿を編集";
     const fetchPostDataForEdit = async () => {
       try {
         const response = await fetch(`/portfolio/api/get_posts.php`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
         const posts = await response.json();
         const postToEdit = posts.find(p => p.id === postId);
 
         if (postToEdit) {
-          existingPostData = postToEdit; // 既存データを保持
+          existingPostData = postToEdit;
+          
           // フォームにデータをセット
           document.getElementById("postTitle").value = postToEdit.title;
           document.getElementById("clientName").value = postToEdit.client_name;
           document.getElementById("description").value = postToEdit.description;
           
+          // ★★★ タグデータの設定 ★★★
+          if (postToEdit.tags && Array.isArray(postToEdit.tags)) {
+            currentTags = [...postToEdit.tags];
+            updateTagInputUI();
+          }
+          
           // クライアントロゴの既存プレビュー
           if (postToEdit.client_logo) {
             setupImagePreview(clientLogoInput, clientLogoPreview, postToEdit.client_logo);
-            clientLogoRemoveBtn.style.display = 'inline-block'; // ロゴがあれば削除ボタン表示
+            clientLogoRemoveBtn.style.display = 'inline-block';
           } else {
             clientLogoRemoveBtn.style.display = 'none';
           }
 
           // ギャラリー画像の既存プレビューとフィールド追加
-          galleryImagesContainer.innerHTML = ''; // 初期ギャラリーフィールドをクリア
+          galleryImagesContainer.innerHTML = '';
           if (postToEdit.gallery_images && postToEdit.gallery_images.length > 0) {
             postToEdit.gallery_images.forEach(img => {
-              addGalleryImageField(img.path, img.caption, true); // 既存画像として追加
+              addGalleryImageField(img.path, img.caption, true);
             });
           } else {
-            // ギャラリー画像がない場合も、最低1つは入力フィールドを表示
             addGalleryImageField();
           }
           
@@ -222,10 +410,16 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     fetchPostDataForEdit();
   } else {
-      // 新規作成の場合、最低1つのギャラリー画像フィールドを確保
-      if (galleryImagesContainer.children.length === 0) {
-        addGalleryImageField();
-      }
+    if (galleryImagesContainer.children.length === 0) {
+      addGalleryImageField();
+    }
   }
 
+  // ★★★ 初期化処理 ★★★
+  const initialize = async () => {
+    await fetchAvailableTags();
+    updateTagInputUI();
+  };
+
+  initialize();
 });
