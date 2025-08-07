@@ -10,7 +10,7 @@
 <body>
   <script>
     // フロントページ閲覧ガード（クッキー認証）
-    if (!document.cookie.includes("front_auth_check=1")) { // ★ここを修正しました
+    if (!document.cookie.includes("front_auth_check=1")) {
       window.location.href = "/portfolio/login.html";
     }
   </script>
@@ -19,14 +19,29 @@
     <div class="logo">
       <img src="/portfolio/assets/logo.svg" alt="STARTEND Design Co." width="200" height="50" />
     </div>
-    <div class="sort-control">
-      <label>並び順：</label>
-      <select id="sortSelect">
-        <option value="newest">新しい順</option>
-        <option value="client">クライアント名順</option>
-      </select>
+    <div class="header-controls">
+      <!-- ★★★ タグフィルターコントロール ★★★ -->
+      <div class="filter-control">
+        <button id="clearFiltersBtn" class="clear-filters-btn" style="display: none;">
+          フィルターをクリア
+        </button>
+      </div>
+      <div class="sort-control">
+        <label>並び順：</label>
+        <select id="sortSelect">
+          <option value="newest">新しい順</option>
+          <option value="client">クライアント名順</option>
+        </select>
+      </div>
     </div>
   </header>
+
+  <!-- ★★★ タグフィルター表示エリア ★★★ -->
+  <section class="filter-section">
+    <div id="tagFilterContainer" class="tag-filter-container">
+      <!-- タグフィルターボタンが動的に生成される -->
+    </div>
+  </section>
 
   <main>
     <div id="postGrid" class="grid-container"></div>
