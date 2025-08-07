@@ -475,3 +475,306 @@ body {
 
 /* ギャラリー画像削除ボタンと共通化しても良いが、今回は区別 */
 /* .remove-gallery-image-btn のスタイルは既に定義済み */
+
+/* ★★★ 一括操作バーのスタイル ★★★ */
+.bulk-action-bar {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.selected-count {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.bulk-delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.bulk-delete-btn:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.bulk-delete-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.deselect-all-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.deselect-all-btn:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* ★★★ テーブルのチェックボックス列 ★★★ */
+.posts-table .checkbox-column {
+  width: 50px;
+  text-align: center;
+  padding: 8px;
+}
+
+.posts-table .checkbox-column input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #007bff;
+}
+
+/* ★★★ タグ表示のスタイル ★★★ */
+.tags-column {
+  max-width: 200px;
+}
+
+.tag-badge {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin: 2px;
+  white-space: nowrap;
+}
+
+.tag-badge:nth-child(2n) {
+  background-color: #28a745;
+}
+
+.tag-badge:nth-child(3n) {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.tag-badge:nth-child(4n) {
+  background-color: #dc3545;
+}
+
+.tag-badge:nth-child(5n) {
+  background-color: #6f42c1;
+}
+
+.no-tags {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+/* ★★★ フォームのタグ入力部分 ★★★ */
+.tag-input-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  min-height: 40px;
+  align-items: center;
+}
+
+.tag-item {
+  display: inline-flex;
+  align-items: center;
+  background-color: #007bff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  gap: 5px;
+}
+
+.tag-item .remove-tag {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.tag-item .remove-tag:hover {
+  background-color: rgba(255,255,255,0.3);
+}
+
+.tag-input-field {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  min-width: 100px;
+  padding: 4px;
+  font-size: 0.9rem;
+}
+
+.tag-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+}
+
+.tag-suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.tag-suggestion-item:hover {
+  background-color: #f8f9fa;
+}
+
+.tag-suggestion-item.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.form-group.tag-input-group {
+  position: relative;
+}
+
+/* ★★★ レスポンシブ対応（一括操作バー） ★★★ */
+@media (max-width: 768px) {
+  .bulk-action-bar {
+    padding: 12px 15px;
+  }
+  
+  .bulk-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .bulk-delete-btn,
+  .deselect-all-btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .selected-count {
+    text-align: center;
+    font-size: 0.9rem;
+  }
+  
+  /* テーブルのレスポンシブ調整 */
+  .posts-table td:nth-of-type(1):before { content: "選択"; }
+  .posts-table td:nth-of-type(2):before { content: "タイトル"; }
+  .posts-table td:nth-of-type(3):before { content: "クライアント名"; }
+  .posts-table td:nth-of-type(4):before { content: "タグ"; }
+  .posts-table td:nth-of-type(5):before { content: "作成日"; }
+  .posts-table td:nth-of-type(6):before { content: "アクション"; }
+  
+  .posts-table .checkbox-column {
+    text-align: left;
+    padding-left: 50%;
+  }
+  
+  .tag-input-container {
+    min-height: 50px;
+  }
+  
+  .tag-suggestions {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    top: auto;
+    max-height: 200px;
+  }
+}
+
+/* ★★★ アニメーション効果 ★★★ */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bulk-action-bar {
+  animation: slideInDown 0.3s ease;
+}
+
+.tag-badge {
+  transition: all 0.2s ease;
+}
+
+.tag-badge:hover {
+  transform: scale(1.05);
+}
+
+/* ★★★ 選択時の行ハイライト ★★★ */
+.posts-table tr:has(.post-checkbox:checked) {
+  background-color: #e3f2fd !important;
+  border-left: 3px solid #2196f3;
+}
+
+.posts-table tr:has(.post-checkbox:checked):hover {
+  background-color: #bbdefb !important;
+}
+
+/* Fallback for browsers that don't support :has() */
+.posts-table tr.selected {
+  background-color: #e3f2fd !important;
+  border-left: 3px solid #2196f3;
+}
+
+.posts-table tr.selected:hover {
+  background-color: #bbdefb !important;
+}
