@@ -48,6 +48,24 @@
         <div id="clientLogoPreview" class="image-preview"></div>
       </div>
 
+      <!-- ★★★ タグ入力部分を追加 ★★★ -->
+      <div class="form-group tag-input-group">
+        <label for="tagInputField">タグ</label>
+        <div id="tagInputContainer" class="tag-input-container">
+          <input 
+            type="text" 
+            id="tagInputField" 
+            class="tag-input-field" 
+            placeholder="タグを入力してEnterキー..."
+            autocomplete="off"
+          />
+        </div>
+        <div id="tagSuggestions" class="tag-suggestions"></div>
+        <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
+          Enterキーでタグを追加できます。既存のタグから選択することも可能です。
+        </small>
+      </div>
+
       <div class="form-group">
         <label>ギャラリー画像 (複数選択可)</label>
         <div id="galleryImagesContainer">
