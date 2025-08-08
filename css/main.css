@@ -257,16 +257,33 @@ main {
   
   .post-item-content {
     height: 130px;
-    padding: 12px 14px 14px 14px;
+    padding: 12px 14px 6px 14px; /* 下パディングをさらに減らす */
   }
   
   .post-item h3 {
     font-size: 1rem;
-    height: 2.6rem;
+    height: 2.4rem; /* 高さを調整 */
+    margin-bottom: 5px; /* マージンを調整 */
   }
   
   .post-item p {
     font-size: 0.85rem;
+    margin-bottom: 3px; /* マージンを調整 */
+    height: 1.2rem; /* 高さを調整 */
+    line-height: 1.2rem;
+  }
+  
+  .post-tags {
+    margin-top: 3px;
+    max-height: 1.5rem; /* タブレットでさらに制限 */
+    padding-bottom: 6px;
+  }
+  
+  .post-tag {
+    font-size: 0.55rem;
+    padding: 1px 3px;
+    height: 12px;
+    max-width: 60px;
   }
   
   .loading-indicator {
@@ -304,6 +321,22 @@ main {
   
   .post-item-content {
     height: 120px;
+    padding: 8px 10px 4px 10px; /* 下パディングを最小に */
+  }
+  
+  .post-tags {
+    margin-top: 2px;
+    gap: 1px; /* ギャップを最小に */
+    max-height: 1.2rem; /* スマホでは大幅に制限 */
+    padding-bottom: 8px; /* 下部に十分な余白 */
+  }
+  
+  .post-tag {
+    font-size: 0.5rem; /* フォントサイズを最小に */
+    padding: 0px 2px; /* パディングを最小に */
+    border-radius: 1px;
+    max-width: 40px;
+    height: 10px; /* 高さを最小に */
   }
   
   .load-more-button {
