@@ -31,22 +31,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let existingPostData = null; 
   let clientLogoDeleted = false;
 
-  // ★★★ 利用可能なタグを取得する関数 ★★★
+  // ★★★ 利用可能なタグを新しいAPIから取得する関数 ★★★
   const fetchAvailableTags = async () => {
     try {
-      const response = await fetch("/portfolio/api/get_posts.php");
+      const response = await fetch("/portfolio/api/tags.php");
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
-      const posts = await response.json();
-      const tagSet = new Set();
-      
-      posts.forEach(post => {
-        if (post.tags && Array.isArray(post.tags)) {
-          post.tags.forEach(tag => tagSet.add(tag));
-        }
-      });
-      
-      availableTags = Array.from(tagSet).sort();
+      const tags = await response.json();
+      availableTags = tags.map(tag => tag.name).sort();
     } catch (error) {
       console.error("タグデータの取得に失敗:", error);
       availableTags = [];
