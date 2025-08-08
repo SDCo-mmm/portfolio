@@ -5,6 +5,18 @@ body {
   padding: 0;
   background-color: #f8f8f8;
   color: #333;
+  width: 100%;
+  overflow-x: hidden; /* 横スクロールを防止 */
+}
+
+html {
+  width: 100%;
+  overflow-x: hidden; /* 横スクロールを防止 */
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box; /* 全要素にbox-sizingを適用 */
 }
 
 header {
@@ -15,6 +27,8 @@ header {
   background-color: #fff;
   border-bottom: 1px solid #eee;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .logo img {
@@ -31,25 +45,22 @@ header {
 
 main {
   padding: 20px;
-  max-width: 1400px; /* コンテナ幅を拡張 */
   margin: 20px auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
+/* ★★★ 可変列グリッドレイアウト（改良版） ★★★ */
 .grid-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 50px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 320px); /* 320pxの固定幅で自動調整 */
+  gap: 50px; /* 固定50pxの間隔 */
+  justify-content: center; /* グリッド全体を中央寄せ */
+  align-items: start;
   padding: 0 10px;
-}
-
-/* ★★★ 列数を自動調整（可変列） ★★★ */
-@media (min-width: 769px) {
-  .grid-container {
-    /* 固定幅320px + gap50px = 370pxで計算 */
-    /* 4列: 1480px, 3列: 1110px, 2列: 740px */
-  }
+  width: 100%;
+  margin: 0 auto;
 }
 
 /* ★★★ 投稿アイテムのスタイル（大幅改善） ★★★ */
@@ -225,6 +236,7 @@ main {
   }
   
   .grid-container {
+    grid-template-columns: repeat(auto-fit, 280px); /* モバイル用サイズ */
     gap: 30px; /* モバイルでは間隔を少し狭める */
   }
   
@@ -276,6 +288,7 @@ main {
 
 @media (max-width: 480px) {
   .grid-container {
+    grid-template-columns: repeat(auto-fit, 260px); /* スマホ用サイズ */
     gap: 25px;
     padding: 0 20px; /* 左右に余白を追加 */
   }
@@ -625,6 +638,8 @@ header {
   border-bottom: 1px solid #ddd; /* 下部に境界線 */
   padding: 20px;
   margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tag-filter-container {
@@ -632,8 +647,11 @@ header {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 0; /* gapを削除してmargin-bottomで制御 */
   text-align: center; /* 全体を中央寄せ */
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 10px; /* 左右にパディングを追加 */
 }
 
 /* ★★★ フィルターヘッダー部分（1行表示対応） ★★★ */
@@ -641,46 +659,40 @@ header {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-wrap: nowrap; /* 1行強制 */
+  flex-wrap: wrap;
   gap: 20px;
+}
+
+.tag-filter-buttons {
+  display: flex !important; /* blockをオーバーライド */
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
 }
 
 @media (min-width: 769px) {
   .filter-header {
-    flex-wrap: nowrap; /* PC・タブレットで1行表示 */
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  
+  .tag-filter-buttons {
+    margin-left: 0;
+    display: flex !important; /* 強制的にflexを適用 */
   }
 }
 
-.tag-filter-title {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #555;
-  margin: 0;
-}
-
-.clear-filters-btn {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 6px 16px; /* 高さを少し低く */
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  display: none;
-}
-
-.clear-filters-btn:hover {
-  background-color: #5a6268;
-  transform: translateY(-1px);
-}
-
-.tag-filter-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center; /* 中央寄せ */
+@media (max-width: 768px) {
+  .filter-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .tag-filter-buttons {
+    order: 2;
+    display: flex !important; /* スマホでもflexを強制 */
+  }
 }
 
 /* ★★★ タグフィルターボタン（高さ調整・グレー系デザイン） ★★★ */
@@ -864,8 +876,9 @@ header {
   
   .clear-filters-btn {
     font-size: 0.85rem;
-    padding: 8px 16px;
-    width: 100%;
+    padding: 4px 12px; /* タグボタンと同じパディングに統一 */
+    width: auto; /* 幅をautoに変更 */
+    height: 30px; /* 高さも統一 */
   }
   
   .post-tags {
