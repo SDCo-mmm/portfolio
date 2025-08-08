@@ -98,6 +98,13 @@ body {
   color: #343a40;
 }
 
+/* ナビゲーションの現在ページ表示 */
+.admin-header nav a.current-page {
+  background-color: #f8f9fa;
+  color: #343a40;
+  font-weight: 600;
+}
+
 .admin-main {
   padding: 20px;
   max-width: 1000px;
@@ -149,8 +156,7 @@ body {
   }
 }
 
-/* admin.css の既存スタイルに追記 */
-
+/* 投稿一覧テーブル */
 .posts-table {
   width: 100%;
   border-collapse: collapse;
@@ -242,20 +248,20 @@ body {
     color: #555;
   }
   /* スマホ表示時のdata-label設定（JSで動的に追加する必要があるが、ここではCSSのみ） */
-  .posts-table td:nth-of-type(1):before { content: "タイトル"; }
-  .posts-table td:nth-of-type(2):before { content: "クライアント名"; }
-  .posts-table td:nth-of-type(3):before { content: "作成日"; }
-  .posts-table td:nth-of-type(4):before { content: "アクション"; }
+  .posts-table td:nth-of-type(1):before { content: "選択"; }
+  .posts-table td:nth-of-type(2):before { content: "タイトル"; }
+  .posts-table td:nth-of-type(3):before { content: "クライアント名"; }
+  .posts-table td:nth-of-type(4):before { content: "タグ"; }
+  .posts-table td:nth-of-type(5):before { content: "作成日"; }
+  .posts-table td:nth-of-type(6):before { content: "アクション"; }
   .posts-table .actions {
     text-align: center;
     padding-left: 0;
   }
 }
 
-/* admin.css の既存スタイルに追記 */
-
+/* 投稿フォーム */
 .admin-main h1 {
-  /* 既存のh1スタイルは維持しつつ、フォーム用のマージンを調整 */
   margin-bottom: 30px;
 }
 
@@ -449,8 +455,6 @@ body {
   }
 }
 
-/* admin.css の既存スタイルに追記 */
-
 .remove-button { /* クライアントロゴ削除ボタンなど汎用的に使用 */
   background-color: #f44336; /* 赤色 */
   color: white;
@@ -472,9 +476,6 @@ body {
 .form-group input[type="file"] + .remove-button {
   margin-top: 5px; /* ファイル入力の下に配置される場合 */
 }
-
-/* ギャラリー画像削除ボタンと共通化しても良いが、今回は区別 */
-/* .remove-gallery-image-btn のスタイルは既に定義済み */
 
 /* ★★★ 一括操作バーのスタイル ★★★ */
 .bulk-action-bar {
@@ -777,4 +778,223 @@ body {
 
 .posts-table tr.selected:hover {
   background-color: #bbdefb !important;
+}
+
+/* ==================== タグ管理画面専用スタイル ==================== */
+
+.tag-add-section {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.tag-add-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tag-add-input-group input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.initial-tags-section {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 20px;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+}
+
+.initial-tags-button {
+  background-color: #2196f3;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+.initial-tags-button:hover:not(:disabled) {
+  background-color: #1976d2;
+  transform: translateY(-1px);
+}
+
+.initial-tags-button:disabled {
+  background-color: #9e9e9e;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.initial-tags-description {
+  margin: 10px 0 0 0;
+  color: #1565c0;
+  font-size: 0.9rem;
+}
+
+.tags-list-section h2 {
+  margin-bottom: 20px;
+  color: #333;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+.tags-filter-controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tags-filter-controls input[type="text"],
+.tags-filter-controls select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.tags-filter-controls input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+}
+
+.tags-grid {
+  display: flex; /* gridからflexに変更 */
+  flex-direction: column; /* 縦並び */
+  gap: 0; /* gapを削除 */
+  margin-top: 20px;
+}
+
+.tags-grid .tag-item {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 15px; /* カード間の間隔を追加 */
+}
+
+.tags-grid .tag-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-color: #999; /* ブルーからグレーに変更 */
+  transform: translateY(-2px);
+  background-color: #f8f9fa; /* ホバー時に薄いグレー */
+}
+
+.tag-info h3 {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.tag-usage {
+  margin: 0 0 3px 0; /* 間隔を調整 */
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.tag-created {
+  margin: 0;
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.tag-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.edit-tag-btn,
+.delete-tag-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.edit-tag-btn {
+  background-color: #6c757d; /* グレー系に変更 */
+  color: white;
+}
+
+.edit-tag-btn:hover {
+  background-color: #5a6268; /* ダークグレー */
+  transform: translateY(-1px);
+}
+
+.delete-tag-btn {
+  background-color: #dc3545; /* 削除は赤のまま */
+  color: white;
+}
+
+.delete-tag-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+/* レスポンシブ対応（タグ管理画面） */
+@media (max-width: 768px) {
+  .tag-add-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .tag-add-input-group input[type="text"] {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .initial-tags-section {
+    padding: 15px;
+  }
+  
+  .tags-filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .tags-filter-controls input[type="text"],
+  .tags-filter-controls select {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .tags-grid .tag-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+    padding: 15px;
+    margin-bottom: 10px; /* スマホでは間隔を少し狭く */
+  }
+  
+  .tag-actions {
+    justify-content: center;
+  }
+  
+  .edit-tag-btn,
+  .delete-tag-btn {
+    flex: 1;
+  }
 }
