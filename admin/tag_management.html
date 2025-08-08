@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>タグ管理 | 管理画面</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/portfolio/admin/css/admin.css" />
+</head>
+<body>
+  <script>
+    // 管理画面閲覧ガード
+    if (!document.cookie.includes("admin_auth_check=1")) {
+      window.location.href = "/portfolio/admin/login.html";
+    }
+  </script>
+
+  <header class="admin-header">
+    <div class="logo">STARTEND Design Co. (Admin)</div>
+    <nav>
+      <a href="/portfolio/admin/index.html">投稿一覧</a>
+      <a href="/portfolio/admin/post_form.html">新規投稿</a>
+      <a href="/portfolio/admin/tag_management.html" class="current-page">タグ管理</a>
+      <a href="#" id="logoutBtn">ログアウト</a>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <h1>タグ管理</h1>
+    
+    <!-- タグ追加フォーム -->
+    <div class="tag-add-section">
+      <div class="form-group">
+        <label for="newTagName">新しいタグを追加</label>
+        <div class="tag-add-input-group">
+          <input type="text" id="newTagName" placeholder="タグ名を入力" />
+          <button type="button" id="addTagBtn" class="add-button">追加</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 初期タグ一括追加ボタン -->
+    <div class="initial-tags-section">
+      <button type="button" id="addInitialTagsBtn" class="initial-tags-button">
+        初期タグを一括追加
+      </button>
+      <p class="initial-tags-description">
+        デザイン業界でよく使用される42個のタグを一括で追加します。
+      </p>
+    </div>
+
+    <!-- タグ一覧表示 -->
+    <div class="tags-list-section">
+      <h2>登録済みタグ一覧</h2>
+      <div class="tags-filter-controls">
+        <input type="text" id="tagSearchInput" placeholder="タグを検索..." />
+        <select id="tagSortSelect">
+          <option value="name">名前順</option>
+          <option value="usage">使用回数順</option>
+          <option value="created">作成日順</option>
+        </select>
+      </div>
+      <div id="tagsList" class="tags-grid">
+        <p>タグを読み込み中...</p>
+      </div>
+    </div>
+
+    <!-- メッセージ表示エリア -->
+    <div id="messageArea" class="form-message" style="display: none;"></div>
+  </main>
+
+  <script src="/portfolio/admin/js/tag_management.js"></script>
+  <script>
+    // ログアウト機能
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      document.cookie = "admin_auth_check=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/admin/";
+      document.cookie = "admin_auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/admin/";
+      window.location.href = "/portfolio/admin/login.html";
+    });
+  </script>
+</body>
+</html>

@@ -19,6 +19,9 @@
   <header class="admin-header">
     <div class="logo">STARTEND Design Co. (Admin)</div>
     <nav>
+      <a href="/portfolio/admin/index.html" class="current-page">投稿一覧</a>
+      <a href="/portfolio/admin/post_form.html">新規投稿</a>
+      <a href="/portfolio/admin/tag_management.html">タグ管理</a>
       <a href="#" id="logoutBtn">ログアウト</a>
     </nav>
   </header>
@@ -37,7 +40,7 @@
     document.getElementById("logoutBtn").addEventListener("click", () => {
       // Cookieを削除してログインページへリダイレクト
       document.cookie = "admin_auth_check=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/admin/";
-      document.cookie = "admin_auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/admin/";
+      document.cookie = "admin_auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/portfolio/";
       window.location.href = "/portfolio/admin/login.html";
     });
   </script>
