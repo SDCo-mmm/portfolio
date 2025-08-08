@@ -51,10 +51,10 @@ main {
   box-sizing: border-box;
 }
 
-/* ★★★ 可変列グリッドレイアウト（改良版） ★★★ */
+/* ★★★ 可変列グリッドレイアウト（サイズ拡大版） ★★★ */
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, 320px); /* 320pxの固定幅で自動調整 */
+  grid-template-columns: repeat(auto-fit, 350px); /* 350pxに拡大 */
   gap: 50px; /* 固定50pxの間隔 */
   justify-content: center; /* グリッド全体を中央寄せ */
   align-items: start;
@@ -63,7 +63,7 @@ main {
   margin: 0 auto;
 }
 
-/* ★★★ 投稿アイテムのスタイル（大幅改善） ★★★ */
+/* ★★★ 投稿アイテムのスタイル（サイズ拡大・正方形対応版） ★★★ */
 .post-item {
   background-color: #fff;
   border-radius: 8px;
@@ -74,9 +74,10 @@ main {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
-  width: 320px; /* 固定幅 */
-  height: 320px; /* 固定高さ */
+  width: 350px; /* 350pxに拡大 */
+  height: 350px; /* 正方形: 350pxに拡大 */
   flex-shrink: 0; /* 縮小防止 */
+  aspect-ratio: 1; /* 完全な正方形を保証 */
 }
 
 .post-item:hover {
@@ -84,10 +85,10 @@ main {
   box-shadow: 16px -16px 0 #f0f0f0; /* ホバー時も右上ハードシャドウ */
 }
 
-/* ★★★ ロゴ表示エリア（固定高さ） ★★★ */
+/* ★★★ ロゴ表示エリア（サイズ拡大版） ★★★ */
 .logo-container {
   width: 100%;
-  height: 180px; /* 固定高さ */
+  height: 180px; /* 少し縮小してコンテンツエリアに余裕を持たせる */
   flex-shrink: 0; /* 高さ固定 */
   display: flex;
   align-items: center;
@@ -117,26 +118,27 @@ main {
   opacity: 0.6;
 }
 
-/* ★★★ コンテンツエリア（固定高さ） ★★★ */
+/* ★★★ コンテンツエリア（クライアント名・タグ2行対応版） ★★★ */
 .post-item-content {
-  height: 140px; /* 固定高さ */
+  height: 170px; /* 高さをさらに拡大してタグ2行分も確保 */
   flex-shrink: 0;
-  padding: 16px 18px 18px 18px;
+  padding: 16px 18px 8px 18px;
   background-color: #fff;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   text-align: center;
-  overflow: hidden; /* はみ出し防止 */
+  overflow: visible; /* overflowをvisibleに変更 */
+  position: relative; /* ポジションを相対位置に */
 }
 
 .post-item h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  line-height: 1.4;
+  margin: 0 0 6px 0;
+  font-size: 1.05rem; /* 少し大きく */
+  font-weight: 400; /* 細いフォント M PLUS 1p - 400 */
+  line-height: 1.3;
   color: #333;
-  height: 2.8rem; /* 2行分の高さ確保 */
+  height: 2.6rem; /* タイトル用の高さ */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -145,15 +147,154 @@ main {
 }
 
 .post-item p {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0 0 10px 0;
-  font-weight: 400;
-  height: 1.35rem; /* 1行分の高さ確保 */
-  line-height: 1.35rem;
+  font-size: 1.0rem; /* 少し大きく */
+  color: #333;
+  margin: 0 0 6px 0;
+  font-weight: 600; /* 太いフォント M PLUS 1p - 600 */
+  height: 2.6rem; /* 2行分の高さを確保 */
+  line-height: 1.3; /* ライン高さを調整 */
+  display: -webkit-box; /* flexboxスタイルを追加 */
+  -webkit-line-clamp: 2; /* 2行まで表示 */
+  -webkit-box-orient: vertical; /* 縦方向に配置 */
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis; /* 2行を超える場合に省略記号 */
+}
+
+/* ★★★ タグ表示の修正（+N more + オーバーレイ表示版） ★★★ */
+.post-tags {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  /* 自然な高さに戻す */
+  min-height: 0;
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.post-tag {
+  background-color: #e9ecef;
+  color: #666;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
   white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 80px;
+  line-height: 1.2;
+  display: inline-block;
+}
+
+.post-item:hover .post-tag {
+  background-color: #666;
+  color: white;
+}
+
+/* +N more タグのスタイル */
+.post-tag.more-tag {
+  background-color: #999;
+  color: white;
+  font-style: italic;
+  cursor: pointer;
+  max-width: none;
+}
+
+.post-item:hover .post-tag.more-tag {
+  background-color: #777;
+}
+
+/* ★★★ タグオーバーレイ表示システム ★★★ */
+.post-item {
+  position: relative; /* オーバーレイのため */
+}
+
+.tag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  display: none; /* 初期は非表示 */
+  z-index: 10;
+  border-radius: 8px;
+  padding: 20px;
+  box-sizing: border-box;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.post-item:hover .tag-overlay {
+  display: flex;
+  opacity: 1;
+}
+
+.tag-overlay-content {
+  width: 100%;
+  max-width: 100%;
+}
+
+.tag-overlay-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #fff;
+}
+
+.tag-overlay-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.tag-overlay-tags .post-tag {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  max-width: none;
+  transition: all 0.2s ease;
+}
+
+.tag-overlay-tags .post-tag:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.post-tag {
+  background-color: #e9ecef;
+  color: #666;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 80px;
+  line-height: 1.2; /* ライン高さを明示的に設定 */
+  display: inline-block; /* インラインブロックで表示 */
+}
+
+.post-item:hover .post-tag {
+  background-color: #666;
+  color: white;
 }
 
 /* ★★★ 無限スクロール用のローディングインジケーター ★★★ */
@@ -236,17 +377,18 @@ main {
   }
   
   .grid-container {
-    grid-template-columns: repeat(auto-fit, 280px); /* モバイル用サイズ */
+    grid-template-columns: repeat(auto-fit, 300px); /* タブレット用サイズ */
     gap: 30px; /* モバイルでは間隔を少し狭める */
   }
   
   .post-item {
-    width: 280px; /* モバイル用サイズ */
-    height: 280px;
+    width: 300px; /* タブレット用サイズ */
+    height: 300px; /* 正方形を保持 */
+    aspect-ratio: 1; /* 正方形を強制 */
   }
   
   .logo-container {
-    height: 150px;
+    height: 170px; /* タブレット用サイズ */
     padding: 16px;
   }
   
@@ -256,33 +398,38 @@ main {
   }
   
   .post-item-content {
-    height: 130px;
-    padding: 12px 14px 6px 14px; /* 下パディングをさらに減らす */
+    height: 130px; /* タブレット用高さ */
+    padding: 12px 14px 6px 14px;
   }
   
   .post-item h3 {
-    font-size: 1rem;
-    height: 2.4rem; /* 高さを調整 */
-    margin-bottom: 5px; /* マージンを調整 */
+    font-size: 1.0rem;
+    height: 2.4rem;
+    margin-bottom: 4px;
+    line-height: 1.2;
+    font-weight: 400; /* 細いフォント */
   }
   
   .post-item p {
-    font-size: 0.85rem;
-    margin-bottom: 3px; /* マージンを調整 */
-    height: 1.2rem; /* 高さを調整 */
-    line-height: 1.2rem;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    height: 2.4rem; /* 2行分の高さを確保 */
+    line-height: 1.2;
+    font-weight: 600; /* 太いフォント */
+    color: #333;
+    -webkit-line-clamp: 2; /* 2行表示 */
   }
   
   .post-tags {
-    margin-top: 3px;
-    max-height: 1.5rem; /* タブレットでさらに制限 */
-    padding-bottom: 6px;
+    margin-top: 6px;
+    gap: 2px;
+    /* 高さ制限を完全に削除 */
   }
   
   .post-tag {
-    font-size: 0.55rem;
-    padding: 1px 3px;
-    height: 12px;
+    font-size: 0.6rem;
+    padding: 1px 4px;
+    border-radius: 3px;
     max-width: 60px;
   }
   
@@ -305,38 +452,93 @@ main {
 
 @media (max-width: 480px) {
   .grid-container {
-    grid-template-columns: repeat(auto-fit, 260px); /* スマホ用サイズ */
+    grid-template-columns: repeat(auto-fit, 280px); /* スマホ用サイズ */
     gap: 25px;
     padding: 0 20px; /* 左右に余白を追加 */
   }
   
   .post-item {
-    width: 260px; /* スマホ用サイズ */
-    height: 260px;
+    width: 280px; /* スマホ用サイズ */
+    height: 280px; /* 正方形を保持 */
+    aspect-ratio: 1; /* 正方形を強制 */
   }
   
   .logo-container {
-    height: 140px;
+    height: 150px; /* スマホ用サイズ */
   }
   
   .post-item-content {
-    height: 120px;
-    padding: 8px 10px 4px 10px; /* 下パディングを最小に */
+    height: 130px; /* スマホ用高さ（拡大） */
+    padding: 8px 10px 4px 10px;
+  }
+  
+  .post-item h3 {
+    font-size: 0.9rem;
+    height: 2.2rem;
+    margin-bottom: 3px;
+    line-height: 1.1;
+    font-weight: 400; /* 細いフォント */
+  }
+  
+  .post-item p {
+    font-size: 0.85rem;
+    margin-bottom: 3px;
+    height: 2.2rem; /* 2行分の高さを確保 */
+    line-height: 1.1;
+    font-weight: 600; /* 太いフォント */
+    color: #333;
+    -webkit-line-clamp: 2; /* 2行表示 */
+  }
+  
+@media (max-width: 480px) {
+  .tag-overlay {
+    padding: 12px;
+  }
+  
+  .tag-overlay-title {
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+  }
+  
+  .tag-overlay-tags {
+    gap: 3px;
+  }
+  
+  .tag-overlay-tags .post-tag {
+    font-size: 0.65rem;
+    padding: 2px 5px;
   }
   
   .post-tags {
-    margin-top: 2px;
-    gap: 1px; /* ギャップを最小に */
-    max-height: 1.2rem; /* スマホでは大幅に制限 */
-    padding-bottom: 8px; /* 下部に十分な余白 */
+    margin-top: 4px;
+    gap: 1px;
   }
   
   .post-tag {
-    font-size: 0.5rem; /* フォントサイズを最小に */
-    padding: 0px 2px; /* パディングを最小に */
-    border-radius: 1px;
-    max-width: 40px;
-    height: 10px; /* 高さを最小に */
+    font-size: 0.55rem;
+    padding: 1px 3px;
+    border-radius: 2px;
+    max-width: 45px;
+  }
+  
+  /* モバイルでタップによるオーバーレイ表示 */
+  .post-item:active .tag-overlay {
+    display: flex;
+    opacity: 1;
+  }
+}
+  
+  .post-tags {
+    margin-top: 4px;
+    gap: 1px;
+    /* 高さ制限なし */
+  }
+  
+  .post-tag {
+    font-size: 0.55rem;
+    padding: 1px 3px;
+    border-radius: 2px;
+    max-width: 45px;
   }
   
   .load-more-button {
@@ -664,7 +866,7 @@ header {
   align-items: center;
 }
 
-/* ★★★ タグフィルターセクション（大幅改善） ★★★ */
+/* ★★★ タグフィルターセクション（縦並び・センター揃え版） ★★★ */
 .filter-section {
   background-color: #f8f8f8; /* 背景色をメイン背景と同じに */
   border-top: 1px solid #ddd; /* 上部に境界線 */
@@ -680,52 +882,88 @@ header {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0; /* gapを削除してmargin-bottomで制御 */
+  align-items: center; /* 中央揃え */
   text-align: center; /* 全体を中央寄せ */
   width: 100%;
   box-sizing: border-box;
   padding: 0 10px; /* 左右にパディングを追加 */
+  gap: 15px; /* 要素間の間隔 */
 }
 
-/* ★★★ フィルターヘッダー部分（1行表示対応） ★★★ */
+/* ★★★ フィルターヘッダー部分（縦並びレイアウト） ★★★ */
 .filter-header {
+  display: flex;
+  flex-direction: column; /* 縦並びに変更 */
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+}
+
+/* タイトル行（タイトル + クリアボタン） */
+.filter-title-row {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
+.tag-filter-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+/* タグボタン行 */
 .tag-filter-buttons {
-  display: flex !important; /* blockをオーバーライド */
+  display: flex !important;
   flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
+  width: 100%;
+  max-width: 1200px; /* タグボタンエリアの最大幅 */
 }
 
-@media (min-width: 769px) {
-  .filter-header {
-    flex-wrap: nowrap;
-    align-items: center;
-  }
-  
-  .tag-filter-buttons {
-    margin-left: 0;
-    display: flex !important; /* 強制的にflexを適用 */
-  }
+/* ★★★ クリアボタンのデザイン改善（タグ風デザイン） ★★★ */
+.clear-filters-btn {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-color: #6c757d !important; /* グレー背景 */
+  color: white !important;
+  border: 1px solid #6c757d !important;
+  padding: 4px 12px !important;
+  border-radius: 6px !important; /* タグと同じ角丸 */
+  font-size: 0.85rem !important;
+  font-family: 'M PLUS 1p', 'Montserrat', sans-serif !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  height: 30px !important; /* タグと同じ高さ */
+  box-sizing: border-box !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  text-decoration: none !important;
+  outline: none !important;
+  text-align: center !important;
+  line-height: normal !important;
+  transition: all 0.3s ease !important;
+  margin: 0 !important;
 }
 
-@media (max-width: 768px) {
-  .filter-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-  
-  .tag-filter-buttons {
-    order: 2;
-    display: flex !important; /* スマホでもflexを強制 */
-  }
+/* クリアボタンのホバー効果 */
+.clear-filters-btn:hover {
+  background-color: #5a6268 !important;
+  border-color: #5a6268 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 選択時にクリアボタンを表示 */
+.clear-filters-btn.show {
+  display: inline-flex !important;
 }
 
 /* ★★★ タグフィルターボタン（高さ調整・グレー系デザイン） ★★★ */
@@ -778,36 +1016,6 @@ header {
 
 .tag-filter-btn.active .tag-count {
   opacity: 1;
-}
-
-/* ★★★ 投稿アイテム内のタグ表示（グレー系） ★★★ */
-.post-tags {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  justify-content: center;
-  max-height: 3rem; /* 高さ制限でオーバーフロー防止 */
-  overflow: hidden;
-}
-
-.post-tag {
-  background-color: #e9ecef;
-  color: #666;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  max-width: 80px; /* タグの最大幅制限 */
-}
-
-.post-item:hover .post-tag {
-  background-color: #666;
-  color: white;
 }
 
 /* ★★★ 検索結果なしメッセージ ★★★ */
@@ -863,7 +1071,7 @@ header {
   }
 }
 
-/* ★★★ レスポンシブ対応 ★★★ */
+/* ★★★ レスポンシブ対応（縦並びフィルター版） ★★★ */
 @media (max-width: 768px) {
   header {
     flex-direction: column;
@@ -881,19 +1089,24 @@ header {
     padding: 16px;
   }
   
-  .filter-header {
-    flex-direction: column;
-    align-items: stretch;
+  .tag-filter-container {
     gap: 12px;
   }
   
+  .filter-header {
+    gap: 12px;
+  }
+  
+  .filter-title-row {
+    gap: 15px;
+    flex-direction: column; /* スマホでは縦並び */
+  }
+  
   .tag-filter-title {
-    text-align: center;
     font-size: 0.95rem;
   }
   
   .tag-filter-buttons {
-    justify-content: center;
     gap: 6px;
   }
   
@@ -908,22 +1121,9 @@ header {
   }
   
   .clear-filters-btn {
-    font-size: 0.85rem;
-    padding: 4px 12px; /* タグボタンと同じパディングに統一 */
-    width: auto; /* 幅をautoに変更 */
-    height: 30px; /* 高さも統一 */
-  }
-  
-  .post-tags {
-    margin-top: 8px;
-    max-height: 2.5rem;
-  }
-  
-  .post-tag {
-    font-size: 0.65rem;
-    padding: 1px 4px;
-    border-radius: 3px;
-    max-width: 60px;
+    font-size: 0.8rem !important;
+    padding: 5px 10px !important;
+    height: 28px !important; /* スマホ用の高さ調整 */
   }
   
   .no-results-message {
@@ -945,6 +1145,14 @@ header {
     padding: 12px;
   }
   
+  .tag-filter-container {
+    gap: 10px;
+  }
+  
+  .filter-title-row {
+    gap: 10px;
+  }
+  
   .tag-filter-btn {
     font-size: 0.75rem;
     padding: 4px 8px;
@@ -954,21 +1162,23 @@ header {
     gap: 4px;
   }
   
-  .post-item-content {
-    padding: 10px 12px 12px 12px;
+  .clear-filters-btn {
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
+    height: 26px !important;
   }
   
-  .post-tags {
-    margin-top: 6px;
-    gap: 2px;
-    max-height: 2rem;
+  .no-results-message {
+    padding: 30px 10px;
+    margin: 15px 5px;
   }
   
-  .post-tag {
-    font-size: 0.6rem;
-    padding: 1px 3px;
-    border-radius: 2px;
-    max-width: 50px;
+  .no-results-message p {
+    font-size: 0.95rem;
+  }
+  
+  .no-results-message p:first-child {
+    font-size: 1.05rem;
   }
 }
 
