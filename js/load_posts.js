@@ -1,4 +1,4 @@
-// load_posts.js（タグフィルタリング機能付き版）
+// load_posts.js（タグフィルタリング機能付き版 - UI改善）
 
 document.addEventListener("DOMContentLoaded", () => {
   const postGrid = document.getElementById("postGrid");
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ★★★ タグフィルターUIの初期化 ★★★
+  // ★★★ タグフィルターUIの初期化（改善版） ★★★
   const initializeTagFilters = () => {
     // 全投稿からタグを抽出
     const tagCounts = new Map();
@@ -69,7 +69,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ).join('');
       
       tagFilterContainer.innerHTML = `
-        <div class="tag-filter-title">タグで絞り込み:</div>
+        <div class="filter-header">
+          <div class="tag-filter-title">Filter by tags:</div>
+          <button id="clearFiltersBtn" class="clear-filters-btn" style="display: none;">
+            Clear filters
+          </button>
+        </div>
         <div class="tag-filter-buttons">
           ${tagButtonsHtml}
         </div>
@@ -79,6 +84,12 @@ document.addEventListener("DOMContentLoaded", () => {
       tagFilterContainer.querySelectorAll('.tag-filter-btn').forEach(btn => {
         btn.addEventListener('click', () => toggleTagFilter(btn.dataset.tag, btn));
       });
+      
+      // クリアボタンのイベントリスナー設定
+      const newClearBtn = document.getElementById('clearFiltersBtn');
+      if (newClearBtn) {
+        newClearBtn.addEventListener('click', clearAllFilters);
+      }
     }
   };
 
@@ -141,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ★★★ フィルタリング後の投稿を表示 ★★★
+  // ★★★ フィルタリング後の投稿を表示（無限スクロール修正版） ★★★
   const displayFilteredPosts = (reset = false) => {
     if (reset) {
       postGrid.innerHTML = "";
@@ -205,16 +216,20 @@ document.addEventListener("DOMContentLoaded", () => {
         postCard.style.transform = 'translateY(0)';
       }, 50);
     });
+
+    // ★★★ 無限スクロール用のボタン更新を追加 ★★★
+    updateLoadMoreButton();
   };
 
   // ★★★ クリアボタンの表示状態を更新 ★★★
   const updateClearFiltersButton = () => {
-    if (clearFiltersBtn) {
+    const clearBtn = document.getElementById('clearFiltersBtn');
+    if (clearBtn) {
       if (activeFilters.size > 0) {
-        clearFiltersBtn.style.display = 'inline-block';
-        clearFiltersBtn.textContent = `フィルターをクリア (${activeFilters.size}個選択中)`;
+        clearBtn.style.display = 'block';
+        clearBtn.textContent = `Clear filters (${activeFilters.size} selected)`;
       } else {
-        clearFiltersBtn.style.display = 'none';
+        clearBtn.style.display = 'none';
       }
     }
   };
@@ -344,10 +359,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ★★★ イベントリスナーの設定 ★★★
   if (sortSelect) {
     sortSelect.addEventListener("change", handleSortChange);
-  }
-
-  if (clearFiltersBtn) {
-    clearFiltersBtn.addEventListener('click', clearAllFilters);
   }
 
   // ★★★ 初期ロード ★★★
