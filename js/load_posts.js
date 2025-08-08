@@ -1,4 +1,4 @@
-// load_posts.js（タグフィルタリング機能付き版 - UI改善）
+// load_posts.js（タグフィルタリング機能付き版 - レイアウト改善）
 
 document.addEventListener("DOMContentLoaded", () => {
   const postGrid = document.getElementById("postGrid");
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ★★★ タグフィルターUIの初期化（改善版） ★★★
+  // ★★★ タグフィルターUIの初期化（1行レイアウト対応） ★★★
   const initializeTagFilters = () => {
     // 全投稿からタグを抽出
     const tagCounts = new Map();
@@ -68,15 +68,48 @@ document.addEventListener("DOMContentLoaded", () => {
         </button>`
       ).join('');
       
+      // ★★★ 1行レイアウト用のHTML構造（クリアボタンを右側に配置） ★★★
       tagFilterContainer.innerHTML = `
         <div class="filter-header">
           <div class="tag-filter-title">Filter by tags:</div>
-          <button id="clearFiltersBtn" class="clear-filters-btn" style="display: none;">
+          <div class="tag-filter-buttons">
+            ${tagButtonsHtml}
+          </div>
+          <button id="clearFiltersBtn" class="clear-filters-btn" style="display: none; 
+            appearance: none !important; 
+            -webkit-appearance: none !important; 
+            -moz-appearance: none !important;
+            background-color: #f8f9fa !important;
+            color: #6c757d !important;
+            border: 1px solid #6c757d !important;
+            padding: 4px 12px !important;
+            border-radius: 6px !important;
+            font-size: 0.85rem !important;
+            font-family: 'M PLUS 1p', 'Montserrat', sans-serif !important;
+            cursor: pointer !important;
+            font-weight: 500 !important;
+            white-space: nowrap !important;
+            height: 30px !important;
+            box-sizing: border-box !important;
+            display: none !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            text-decoration: none !important;
+            outline: none !important;
+            text-align: center !important;
+            line-height: normal !important;
+            text-transform: none !important;
+            text-indent: 0 !important;
+            text-shadow: none !important;
+            letter-spacing: normal !important;
+            word-spacing: normal !important;
+            border-width: 1px !important;
+            border-style: solid !important;
+            border-image: none !important;
+            margin: 0 !important;">
             Clear filters
           </button>
-        </div>
-        <div class="tag-filter-buttons">
-          ${tagButtonsHtml}
         </div>
       `;
       
@@ -90,6 +123,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (newClearBtn) {
         newClearBtn.addEventListener('click', clearAllFilters);
       }
+      
+      // ★★★ 初期状態でクリアボタンを確実に非表示に ★★★
+      updateClearFiltersButton();
     }
   };
 
@@ -136,11 +172,13 @@ document.addEventListener("DOMContentLoaded", () => {
     currentPage = 1;
     totalPages = Math.ceil(filteredPosts.length / postsPerPage);
     
+    console.log(`Total posts: ${filteredPosts.length}, Total pages: ${totalPages}, Posts per page: ${postsPerPage}`);
+    
     // 表示を更新
     displayFilteredPosts(true);
     
-    // 無限スクロールトリガーをチェック
-    setTimeout(checkScrollTrigger, 100);
+    // ★★★ 自動読み込み防止：初期表示後は手動でスクロールチェックを無効化 ★★★
+    // setTimeout(checkScrollTrigger, 100); // この行をコメントアウト
   };
 
   // ★★★ ソートを適用する関数 ★★★
@@ -226,8 +264,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearBtn = document.getElementById('clearFiltersBtn');
     if (clearBtn) {
       if (activeFilters.size > 0) {
-        clearBtn.style.display = 'block';
+        clearBtn.style.display = 'inline-flex';
+        clearBtn.style.alignItems = 'center';
+        clearBtn.style.justifyContent = 'center';
         clearBtn.textContent = `Clear filters (${activeFilters.size} selected)`;
+        
+        // ホバー効果をJavaScriptで追加
+        clearBtn.onmouseenter = () => {
+          clearBtn.style.backgroundColor = '#e9ecef';
+          clearBtn.style.borderColor = '#5a6268';
+          clearBtn.style.color = '#495057';
+          clearBtn.style.transform = 'translateY(-1px)';
+        };
+        clearBtn.onmouseleave = () => {
+          clearBtn.style.backgroundColor = '#f8f9fa';
+          clearBtn.style.borderColor = '#6c757d';
+          clearBtn.style.color = '#6c757d';
+          clearBtn.style.transform = 'translateY(0)';
+        };
       } else {
         clearBtn.style.display = 'none';
       }
@@ -251,9 +305,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const checkScrollTrigger = () => {
     const scrollPosition = window.scrollY + window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
-    const triggerPoint = documentHeight - 1000;
+    const triggerPoint = documentHeight - 200; // さらに短く調整
+    
+    // ★★★ スクロールが実際に発生している場合のみトリガー ★★★
+    const hasActuallyScrolled = window.scrollY > 100; // 100px以上スクロールした場合のみ
+    
+    console.log(`Scroll check - Position: ${scrollPosition}, Height: ${documentHeight}, Trigger: ${triggerPoint}, ScrollY: ${window.scrollY}, Has scrolled: ${hasActuallyScrolled}, Can load: ${currentPage < totalPages && !isLoading}`);
 
-    if (scrollPosition >= triggerPoint && currentPage < totalPages && !isLoading) {
+    if (hasActuallyScrolled && scrollPosition >= triggerPoint && currentPage < totalPages && !isLoading) {
+      console.log('Triggering next page load');
       loadNextPage();
     }
   };
@@ -261,6 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ★★★ 次のページを読み込む ★★★
   const loadNextPage = () => {
     if (currentPage < totalPages) {
+      console.log(`Loading page ${currentPage + 1} of ${totalPages}`);
       currentPage++;
       isLoading = true;
       
@@ -280,6 +341,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         updateLoadMoreButton();
+        
+        // ★★★ 読み込み後の自動チェックは削除 ★★★
+        // setTimeout(checkScrollTrigger, 200); // この行をコメントアウト
       }, 200);
     }
   };
@@ -322,9 +386,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ボタンの表示/非表示を制御
   const updateLoadMoreButton = () => {
+    console.log(`Current page: ${currentPage}, Total pages: ${totalPages}`); // デバッグログ
+    
     if (currentPage < totalPages) {
       loadMoreButton.style.display = 'block';
-      loadMoreButton.textContent = 'もっと見る';
+      loadMoreButton.textContent = `もっと見る (${currentPage}/${totalPages}ページ目)`; // ページ情報を表示
     } else {
       loadMoreButton.style.display = 'none';
     }
@@ -332,6 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 大画面でスクロールできない場合の対策
     setTimeout(() => {
       const hasVerticalScroll = document.documentElement.scrollHeight > window.innerHeight;
+      console.log(`Has vertical scroll: ${hasVerticalScroll}`); // デバッグログ
       if (!hasVerticalScroll && currentPage < totalPages) {
         loadMoreButton.classList.add('no-scroll-highlight');
       } else {
@@ -353,7 +420,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let scrollTimeout;
   window.addEventListener('scroll', () => {
     clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(checkScrollTrigger, 100);
+    scrollTimeout = setTimeout(() => {
+      console.log('Scroll event triggered'); // デバッグログ
+      checkScrollTrigger();
+    }, 50); // 100msから50msに短縮してレスポンシブ性向上
   });
 
   // ★★★ イベントリスナーの設定 ★★★
