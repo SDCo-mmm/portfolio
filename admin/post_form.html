@@ -50,22 +50,32 @@
         <div id="clientLogoPreview" class="image-preview"></div>
       </div>
 
-      <!-- ★★★ タグ入力部分を追加 ★★★ -->
+      <!-- ★★★ 改良されたタグ入力部分 ★★★ -->
       <div class="form-group tag-input-group">
         <label for="tagInputField">タグ</label>
         <div id="tagInputContainer" class="tag-input-container">
-          <input 
-            type="text" 
-            id="tagInputField" 
-            class="tag-input-field" 
-            placeholder="タグを入力してEnterキー..."
-            autocomplete="off"
-          />
+          <div class="tag-input-wrapper">
+            <input 
+              type="text" 
+              id="tagInputField" 
+              class="tag-input-field" 
+              placeholder="タグを入力してEnterキーまたは追加ボタン..."
+              autocomplete="off"
+            />
+            <button type="button" id="addTagButton" class="add-tag-button">追加</button>
+          </div>
         </div>
         <div id="tagSuggestions" class="tag-suggestions"></div>
-        <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
-          Enterキーでタグを追加できます。既存のタグから選択することも可能です。
-        </small>
+        <div class="tag-input-help">
+          <small>
+            💡 <strong>使い方:</strong> 
+            <span>タグを入力してEnterキー・Tabキー・追加ボタンで追加</span>
+            <span>•</span>
+            <span>矢印キーでサジェスト選択</span>
+            <span>•</span>
+            <span>×ボタンで削除</span>
+          </small>
+        </div>
       </div>
 
       <div class="form-group">

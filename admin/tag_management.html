@@ -50,15 +50,24 @@
       </p>
     </div>
 
+    <!-- 一括操作バー -->
+    <div id="bulkTagActionBar" class="bulk-action-bar" style="display: none;">
+      <div class="bulk-actions">
+        <span class="selected-count">0件選択中</span>
+        <button id="bulkDeleteTagsBtn" class="bulk-delete-btn" disabled>選択したタグを削除</button>
+        <button id="deselectAllTagsBtn" class="deselect-all-btn">選択解除</button>
+      </div>
+    </div>
+
     <!-- タグ一覧表示 -->
     <div class="tags-list-section">
       <h2>登録済みタグ一覧</h2>
       <div class="tags-filter-controls">
         <input type="text" id="tagSearchInput" placeholder="タグを検索..." />
         <select id="tagSortSelect">
+          <option value="created">作成日順（新しい順）</option>
           <option value="name">名前順</option>
           <option value="usage">使用回数順</option>
-          <option value="created">作成日順</option>
         </select>
       </div>
       <div id="tagsList" class="tags-grid">
