@@ -1,4 +1,4 @@
-// load_posts.js（シンプル修正版 - タグ省略記号対応）
+// load_posts.js（完全修正版 - タグオーバーレイ修正・フォントサイズ対応）
 
 console.log('load_posts.js loaded successfully');
 
@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let filteredPosts = [];
   const postsPerPage = 12;
 
-  // ★★★ タグ制限と+N more表示機能（スマホ対応版・デバッグ強化） ★★★
+  // ★★★ タグ制限と+N more表示機能（修正版） ★★★
   const createLimitedTagsHtml = (tags, maxVisibleTags = 4) => {
     if (!tags || tags.length === 0) return '';
     
@@ -45,10 +45,16 @@ document.addEventListener("DOMContentLoaded", () => {
     return tagsHtml;
   };
 
-  // ★★★ オーバーレイHTML生成（スマホでは無効） ★★★
+  // ★★★ オーバーレイHTML生成（修正版：タグが制限を超える場合のみ） ★★★
   const createTagOverlayHtml = (tags, title) => {
     const isMobile = window.innerWidth <= 480;
-    if (isMobile || !tags || tags.length <= 4) return ''; // スマホまたは4個以下なら不要
+    if (isMobile) return ''; // スマホでは常に無効
+    
+    // デバイス別のタグ制限数を設定
+    const maxTags = window.innerWidth <= 768 ? 3 : 4;
+    
+    // ★★★ 重要な修正：タグ数が制限を超える場合のみオーバーレイを表示 ★★★
+    if (!tags || tags.length <= maxTags) return ''; // 制限以下なら不要
     
     const allTagsHtml = tags.map(tag => `<span class="post-tag">${tag}</span>`).join('');
     
@@ -320,6 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
       filteredPosts.sort((a, b) => a.client_name.localeCompare(b.client_name));
     }
   };
+
   // ★★★ その他の関数 ★★★
   const updateClearFiltersButton = () => {
     const clearBtn = document.getElementById('clearFiltersBtn');
@@ -328,8 +335,6 @@ document.addEventListener("DOMContentLoaded", () => {
         clearBtn.style.display = 'inline-flex';
         clearBtn.classList.add('show');
         clearBtn.textContent = `Clear filters (${activeFilters.size})`;
-        
-        // ホバー効果は CSS で管理
       } else {
         clearBtn.style.display = 'none';
         clearBtn.classList.remove('show');
@@ -422,7 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener('scroll', () => {
     clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
-      console.log('Scroll event triggered'); // デバッグログ
+      console.log('Scroll event triggered');
       checkScrollTrigger();
     }, 50); // 50msの遅延でパフォーマンス向上
   });
