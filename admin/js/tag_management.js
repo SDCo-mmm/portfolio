@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('.tag-checkbox').forEach(function(checkbox) {
       checkbox.checked = false;
       // ★★★ 選択解除時に背景色もリセット ★★★
-      const tagItem = checkbox.closest('.tag-item');
+      const tagItem = checkbox.closest('.tag-management-item');
       if (tagItem) {
         tagItem.style.backgroundColor = '#ffffff';
         tagItem.style.borderLeft = '1px solid #e0e0e0';
@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function() {
       });
   }
 
-  // ★★★ タグ一覧を表示（一括削除対応版） ★★★
+  // ★★★ タグ一覧を表示（クラス名修正版） ★★★
   function displayTags(tags) {
     if (!tagsList) {
       console.error("tagsList要素が見つかりません");
@@ -224,10 +224,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const tagsHtml = tagsToDisplay.map(function(tag) {
       const isSelected = selectedTagIds.has(tag.id);
-      const backgroundColor = isSelected ? '#f8f9fa' : '#ffffff';
-      const borderLeft = isSelected ? '4px solid #007bff' : '1px solid #e0e0e0';
       
-      return '<div class="tag-item' + (isSelected ? ' selected' : '') + '" data-tag-id="' + (tag.id || 'unknown') + '" style="background-color: ' + backgroundColor + '; border-left: ' + borderLeft + ';">' +
+      return '<div class="tag-management-item' + (isSelected ? ' selected' : '') + '" data-tag-id="' + (tag.id || 'unknown') + '">' +
         '<div class="tag-checkbox-container">' +
         '<input type="checkbox" class="tag-checkbox" value="' + (tag.id || '') + '" ' + (isSelected ? 'checked' : '') + '>' +
         '</div>' +
@@ -257,7 +255,7 @@ document.addEventListener("DOMContentLoaded", function() {
     checkboxes.forEach(function(checkbox) {
       checkbox.addEventListener('change', function() {
         const tagId = this.value;
-        const tagItem = this.closest('.tag-item');
+        const tagItem = this.closest('.tag-management-item');
         
         if (this.checked) {
           selectedTagIds.add(tagId);
