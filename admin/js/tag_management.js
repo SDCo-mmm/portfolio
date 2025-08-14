@@ -7,6 +7,12 @@ document.addEventListener("DOMContentLoaded", function() {
   const tagSortSelect = document.getElementById("tagSortSelect");
   const messageArea = document.getElementById("messageArea");
 
+  // ★★★ 一括削除用の要素 ★★★
+  const bulkTagActionBar = document.getElementById("bulkTagActionBar");
+  const bulkDeleteTagsBtn = document.getElementById("bulkDeleteTagsBtn");
+  const deselectAllTagsBtn = document.getElementById("deselectAllTagsBtn");
+  const selectedCountSpan = document.querySelector(".selected-count");
+
   // 初期タグリスト
   const initialTags = [
     "TVCM", "ラジオCM", "雑誌広告", "新聞広告", "その他広告（紙媒体）", "DM", "ポスター", "フライヤー",
@@ -18,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function() {
   ];
 
   let allTags = []; // 全タグデータ
+  let selectedTagIds = new Set(); // 選択されたタグのID
 
   // メッセージ表示関数
   function showMessage(message, type) {
@@ -29,6 +36,106 @@ document.addEventListener("DOMContentLoaded", function() {
       setTimeout(function() {
         messageArea.style.display = 'none';
       }, 3000);
+    }
+  }
+
+  // ★★★ 選択状態の更新 ★★★
+  function updateSelectionState() {
+    const checkedCount = selectedTagIds.size;
+    
+    // 選択数の表示更新
+    selectedCountSpan.textContent = checkedCount + '件選択中';
+    
+    // 一括削除ボタンの有効/無効
+    bulkDeleteTagsBtn.disabled = checkedCount === 0;
+    
+    // 一括操作バーの表示/非表示
+    if (checkedCount > 0) {
+      bulkTagActionBar.style.display = 'block';
+    } else {
+      bulkTagActionBar.style.display = 'none';
+    }
+  }
+
+  // ★★★ 全選択解除 ★★★
+  function deselectAllTags() {
+    selectedTagIds.clear();
+    document.querySelectorAll('.tag-checkbox').forEach(function(checkbox) {
+      checkbox.checked = false;
+      // ★★★ 選択解除時に背景色もリセット ★★★
+      const tagItem = checkbox.closest('.tag-item');
+      if (tagItem) {
+        tagItem.style.backgroundColor = '#ffffff';
+        tagItem.style.borderLeft = '1px solid #e0e0e0';
+        tagItem.classList.remove('selected');
+      }
+    });
+    updateSelectionState();
+  }
+
+  // ★★★ 一括削除処理 ★★★
+  async function bulkDeleteTags() {
+    const selectedIds = Array.from(selectedTagIds);
+    
+    if (selectedIds.length === 0) return;
+
+    // 選択されたタグ名を取得して確認メッセージに含める
+    const selectedTagNames = allTags
+      .filter(function(tag) { return selectedIds.includes(tag.id); })
+      .map(function(tag) { return tag.name; });
+
+    const confirmMessage = '選択した' + selectedIds.length + '個のタグを削除しますか？\n\n削除されるタグ:\n' + selectedTagNames.join(', ') + '\n\nこの操作は取り消せません。';
+
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      // 一括削除ボタンを無効化
+      bulkDeleteTagsBtn.disabled = true;
+      bulkDeleteTagsBtn.textContent = '削除中...';
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      // 各タグを個別に削除
+      for (let i = 0; i < selectedIds.length; i++) {
+        const tagId = selectedIds[i];
+        try {
+          const formData = new FormData();
+          formData.append('action', 'delete');
+          formData.append('id', tagId);
+
+          const response = await fetch('/portfolio/api/tags.php', {
+            method: 'POST',
+            body: formData
+          });
+
+          const result = await response.json();
+          if (result.status === 'success') {
+            successCount++;
+          } else {
+            errorCount++;
+            console.error('タグ削除エラー (ID: ' + tagId + '):', result.message);
+          }
+        } catch (error) {
+          errorCount++;
+          console.error('タグ削除エラー (ID: ' + tagId + '):', error);
+        }
+      }
+
+      if (successCount > 0) {
+        showMessage(successCount + '個のタグを削除しました。' + (errorCount > 0 ? ' (' + errorCount + '個のエラー)' : ''));
+        deselectAllTags();
+        fetchTags(); // リスト再読み込み
+      } else {
+        showMessage('タグの削除に失敗しました。', 'error');
+      }
+
+    } catch (error) {
+      showMessage('一括削除中にエラーが発生しました: ' + error.message, 'error');
+      console.error('一括削除エラー:', error);
+    } finally {
+      bulkDeleteTagsBtn.disabled = false;
+      bulkDeleteTagsBtn.textContent = '選択したタグを削除';
     }
   }
 
@@ -49,6 +156,17 @@ document.addEventListener("DOMContentLoaded", function() {
       .then(function(responseText) {
         try {
           allTags = JSON.parse(responseText);
+          
+          // ★★★ 初期表示では必ず作成日順（新しい順）でソート ★★★
+          allTags.sort(function(a, b) {
+            return new Date(b.created_at) - new Date(a.created_at);
+          });
+          
+          // ★★★ セレクトボックスのデフォルト値を設定 ★★★
+          if (tagSortSelect) {
+            tagSortSelect.value = 'created';
+          }
+          
           displayTags();
         } catch (parseError) {
           console.error("JSON解析エラー:", parseError);
@@ -73,14 +191,21 @@ document.addEventListener("DOMContentLoaded", function() {
       });
   }
 
-  // タグ一覧を表示
+  // ★★★ タグ一覧を表示（一括削除対応版） ★★★
   function displayTags(tags) {
     if (!tagsList) {
       console.error("tagsList要素が見つかりません");
       return;
     }
     
-    const tagsToDisplay = tags || allTags;
+    let tagsToDisplay = tags || allTags;
+    
+    // ★★★ 初期表示時は必ず作成日順（新しい順）でソート ★★★
+    if (!tags) { // tagsが渡されていない場合（初期表示）
+      tagsToDisplay = [...allTags].sort(function(a, b) {
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+    }
     
     if (!Array.isArray(tagsToDisplay)) {
       console.error("tagsToDisplayが配列ではありません:", typeof tagsToDisplay);
@@ -98,7 +223,14 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     const tagsHtml = tagsToDisplay.map(function(tag) {
-      return '<div class="tag-item" data-tag-id="' + (tag.id || 'unknown') + '">' +
+      const isSelected = selectedTagIds.has(tag.id);
+      const backgroundColor = isSelected ? '#f8f9fa' : '#ffffff';
+      const borderLeft = isSelected ? '4px solid #007bff' : '1px solid #e0e0e0';
+      
+      return '<div class="tag-item' + (isSelected ? ' selected' : '') + '" data-tag-id="' + (tag.id || 'unknown') + '" style="background-color: ' + backgroundColor + '; border-left: ' + borderLeft + ';">' +
+        '<div class="tag-checkbox-container">' +
+        '<input type="checkbox" class="tag-checkbox" value="' + (tag.id || '') + '" ' + (isSelected ? 'checked' : '') + '>' +
+        '</div>' +
         '<div class="tag-info">' +
         '<h3 class="tag-name">' + (tag.name || 'Unknown') + '</h3>' +
         '<p class="tag-usage">' + (tag.usage || 0) + '回使用</p>' +
@@ -115,6 +247,39 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // イベントリスナーを設定
     setupTagEventListeners();
+    setupBulkSelectionListeners();
+  }
+
+  // ★★★ 一括選択のイベントリスナー設定 ★★★
+  function setupBulkSelectionListeners() {
+    const checkboxes = document.querySelectorAll('.tag-checkbox');
+    
+    checkboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        const tagId = this.value;
+        const tagItem = this.closest('.tag-item');
+        
+        if (this.checked) {
+          selectedTagIds.add(tagId);
+          // ★★★ 選択時は薄いグレー背景に設定 ★★★
+          if (tagItem) {
+            tagItem.style.backgroundColor = '#f8f9fa';
+            tagItem.style.borderLeft = '4px solid #007bff';
+            tagItem.classList.add('selected');
+          }
+        } else {
+          selectedTagIds.delete(tagId);
+          // ★★★ 選択解除時は白背景に戻す ★★★
+          if (tagItem) {
+            tagItem.style.backgroundColor = '#ffffff';
+            tagItem.style.borderLeft = '1px solid #e0e0e0';
+            tagItem.classList.remove('selected');
+          }
+        }
+        
+        updateSelectionState();
+      });
+    });
   }
 
   // タグ操作のイベントリスナー設定
@@ -190,6 +355,9 @@ document.addEventListener("DOMContentLoaded", function() {
       .then(function(result) {
         if (result.status === 'success') {
           showMessage(result.message);
+          // 削除されたタグを選択状態からも除去
+          selectedTagIds.delete(tagId);
+          updateSelectionState();
           fetchTags(); // リロード
         } else {
           showMessage(result.message, 'error');
@@ -262,11 +430,11 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // タグの検索とソート
+  // ★★★ タグの検索とソート（初期ソート対応版） ★★★
   function filterAndSortTags() {
-    let filteredTags = allTags.slice(); // 配列のコピー
+    let filteredTags = [...allTags]; // 配列のコピー（スプレッド演算子使用）
     const searchTerm = tagSearchInput ? tagSearchInput.value.toLowerCase() : '';
-    const sortBy = tagSortSelect ? tagSortSelect.value : 'name';
+    const sortBy = tagSortSelect ? tagSortSelect.value : 'created';
 
     // 検索フィルター
     if (searchTerm) {
@@ -285,12 +453,22 @@ document.addEventListener("DOMContentLoaded", function() {
         return (b.usage || 0) - (a.usage || 0);
       });
     } else if (sortBy === 'created') {
+      // ★★★ 作成日順（新しい順）★★★
       filteredTags.sort(function(a, b) {
         return new Date(b.created_at) - new Date(a.created_at);
       });
     }
 
     displayTags(filteredTags);
+  }
+
+  // ★★★ 一括削除のイベントリスナー設定 ★★★
+  if (bulkDeleteTagsBtn) {
+    bulkDeleteTagsBtn.addEventListener('click', bulkDeleteTags);
+  }
+
+  if (deselectAllTagsBtn) {
+    deselectAllTagsBtn.addEventListener('click', deselectAllTags);
   }
 
   // イベントリスナー設定

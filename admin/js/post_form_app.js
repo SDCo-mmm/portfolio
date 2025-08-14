@@ -11,10 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const tagInputContainer = document.getElementById("tagInputContainer");
   const tagInputField = document.getElementById("tagInputField");
   const tagSuggestions = document.getElementById("tagSuggestions");
+  const addTagButton = document.getElementById("addTagButton");
   
   let currentTags = []; // 現在選択されているタグ
   let availableTags = []; // 利用可能なタグ一覧
   let suggestionIndex = -1; // キーボード操作用のインデックス
+  let isComposing = false; // IME入力中フラグ
   
   // クライアントロゴ削除ボタンの追加
   const clientLogoRemoveBtn = document.createElement('button');
@@ -65,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         removeTag(index);
       });
       
-      tagInputContainer.insertBefore(tagElement, tagInputField);
+      tagInputContainer.insertBefore(tagElement, tagInputField.parentNode);
     });
     
     // フォームデータ用のhidden inputを更新
@@ -78,14 +80,25 @@ document.addEventListener("DOMContentLoaded", () => {
     updateTagInputUI();
   };
 
-  // ★★★ タグ追加 ★★★
+  // ★★★ タグ追加（改良版：空白チェック強化） ★★★
   const addTag = (tag) => {
     const trimmedTag = tag.trim();
-    if (trimmedTag && !currentTags.includes(trimmedTag)) {
+    if (trimmedTag && trimmedTag.length > 0 && !currentTags.includes(trimmedTag)) {
       currentTags.push(trimmedTag);
       updateTagInputUI();
       tagInputField.value = '';
       hideSuggestions();
+      // 追加成功のフィードバック
+      tagInputField.style.borderColor = '#28a745';
+      setTimeout(() => {
+        tagInputField.style.borderColor = '#ddd';
+      }, 500);
+    } else if (currentTags.includes(trimmedTag)) {
+      // 重複タグの警告
+      tagInputField.style.borderColor = '#ffc107';
+      setTimeout(() => {
+        tagInputField.style.borderColor = '#ddd';
+      }, 1000);
     }
   };
 
@@ -96,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       !currentTags.includes(tag)
     );
     
-    if (filtered.length === 0) {
+    if (filtered.length === 0 || inputValue.trim() === '') {
       hideSuggestions();
       return;
     }
@@ -134,25 +147,51 @@ document.addEventListener("DOMContentLoaded", () => {
     hiddenInput.value = JSON.stringify(currentTags);
   };
 
-  // ★★★ タグ入力フィールドのイベントリスナー ★★★
+  // ★★★ 改良されたタグ入力フィールドのイベントリスナー ★★★
+  
+  // IME入力開始/終了の検出
+  tagInputField.addEventListener('compositionstart', () => {
+    isComposing = true;
+  });
+
+  tagInputField.addEventListener('compositionend', () => {
+    isComposing = false;
+  });
+
+  // 入力イベント
   tagInputField.addEventListener('input', (e) => {
     const inputValue = e.target.value;
-    if (inputValue.trim()) {
+    if (!isComposing && inputValue.trim()) {
       showSuggestions(inputValue);
-    } else {
+    } else if (!inputValue.trim()) {
       hideSuggestions();
     }
   });
 
+  // キーボードイベント（改良版）
   tagInputField.addEventListener('keydown', (e) => {
     const suggestions = tagSuggestions.querySelectorAll('.tag-suggestion-item');
     
     switch(e.key) {
       case 'Enter':
         e.preventDefault();
+        // IME入力中は処理しない
+        if (isComposing) return;
+        
         if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
           addTag(suggestions[suggestionIndex].dataset.tag);
         } else if (tagInputField.value.trim()) {
+          addTag(tagInputField.value);
+        }
+        break;
+        
+      case 'Tab':
+        // Tabキーでもタグを追加（サジェストがある場合は最初のサジェストを採用）
+        if (suggestions.length > 0) {
+          e.preventDefault();
+          addTag(suggestions[0].dataset.tag);
+        } else if (tagInputField.value.trim()) {
+          e.preventDefault();
           addTag(tagInputField.value);
         }
         break;
@@ -184,6 +223,16 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
     }
   });
+
+  // ★★★ 追加ボタンのイベントリスナー ★★★
+  if (addTagButton) {
+    addTagButton.addEventListener('click', () => {
+      const inputValue = tagInputField.value.trim();
+      if (inputValue) {
+        addTag(inputValue);
+      }
+    });
+  }
 
   // サジェストハイライトの更新
   const updateSuggestionHighlight = (suggestions) => {
