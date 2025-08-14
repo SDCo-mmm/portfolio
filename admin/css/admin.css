@@ -597,7 +597,7 @@ body {
   font-size: 0.85rem;
 }
 
-/* ★★★ 改良されたタグ入力部分のスタイル ★★★ */
+/* ★★★ 投稿フォームのタグ入力部分のスタイル ★★★ */
 .form-group.tag-input-group {
   position: relative;
 }
@@ -936,7 +936,7 @@ body {
   background-color: #bbdefb !important;
 }
 
-/* ==================== タグ管理画面専用スタイル（整理版） ==================== */
+/* ==================== タグ管理画面専用スタイル（修正版） ==================== */
 
 /* タグ追加セクション */
 .tag-add-section {
@@ -1038,8 +1038,8 @@ body {
   margin-top: 20px;
 }
 
-/* タグアイテム - 基本スタイル */
-.tags-grid .tag-item {
+/* タグ管理アイテム - 基本スタイル（投稿フォームのタグと分離） */
+.tag-management-item {
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -1053,33 +1053,22 @@ body {
   position: relative;
 }
 
-/* タグアイテム - ホバー状態 */
-.tags-grid .tag-item:hover {
+/* タグ管理アイテム - ホバー状態 */
+.tag-management-item:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   border-color: #999;
   transform: translateY(-2px);
   background-color: #f8f9fa;
 }
 
-/* タグアイテム - 選択状態 */
-.tags-grid .tag-item:has(.tag-checkbox:checked) {
+/* タグ管理アイテム - 選択状態 */
+.tag-management-item.selected {
   background-color: #f8f9fa;
   border-left: 4px solid #007bff;
   border-color: #007bff;
 }
 
-.tags-grid .tag-item:has(.tag-checkbox:checked):hover {
-  background-color: #e9ecef;
-}
-
-/* CSS :has() 非対応ブラウザ用のフォールバック */
-.tags-grid .tag-item.selected {
-  background-color: #f8f9fa;
-  border-left: 4px solid #007bff;
-  border-color: #007bff;
-}
-
-.tags-grid .tag-item.selected:hover {
+.tag-management-item.selected:hover {
   background-color: #e9ecef;
 }
 
@@ -1202,7 +1191,7 @@ body {
     min-width: auto;
   }
   
-  .tags-grid .tag-item {
+  .tag-management-item {
     flex-direction: column;
     align-items: stretch;
     gap: 15px;
@@ -1256,7 +1245,7 @@ body {
     padding: 12px;
   }
   
-  .tags-grid .tag-item {
+  .tag-management-item {
     padding: 12px;
     margin-bottom: 8px;
   }
@@ -1275,71 +1264,4 @@ body {
     padding: 8px 10px;
     font-size: 0.8rem;
   }
-}
-
-/* ★★★ 緊急修正：タグ管理画面を強制的に白背景にする v2 ★★★ */
-
-/* 全てのタグアイテムを白背景に強制 */
-.tags-grid .tag-item,
-.tags-grid .tag-item *,
-div[data-tag-id],
-div[data-tag-id] * {
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-}
-
-/* ホバー時は薄いグレー */
-.tags-grid .tag-item:hover,
-.tags-grid .tag-item:hover * {
-  background-color: #f8f9fa !important;
-  background: #f8f9fa !important;
-}
-
-/* チェックされた状態でも薄いグレー */
-.tags-grid .tag-item:has(.tag-checkbox:checked),
-.tags-grid .tag-item:has(.tag-checkbox:checked) *,
-.tags-grid .tag-item.selected,
-.tags-grid .tag-item.selected * {
-  background-color: #f8f9fa !important;
-  background: #f8f9fa !important;
-}
-
-/* チェックされた状態のホバー */
-.tags-grid .tag-item:has(.tag-checkbox:checked):hover,
-.tags-grid .tag-item:has(.tag-checkbox:checked):hover *,
-.tags-grid .tag-item.selected:hover,
-.tags-grid .tag-item.selected:hover * {
-  background-color: #e9ecef !important;
-  background: #e9ecef !important;
-}
-
-/* 青系の背景色を全て無効化 */
-*[style*="background-color: #e3f2fd"],
-*[style*="background-color: #bbdefb"],
-*[style*="background-color: rgb(227, 242, 253)"],
-*[style*="background-color: rgb(187, 222, 251)"] {
-  background-color: #f8f9fa !important;
-  background: #f8f9fa !important;
-}
-
-/* タグ管理画面内の全要素に適用 */
-.tags-list-section *,
-.tags-grid * {
-  background-color: inherit !important;
-}
-
-.tags-grid .tag-item {
-  background-color: #ffffff !important;
-  border-left: 1px solid #e0e0e0 !important;
-}
-
-.tags-grid .tag-item:has(.tag-checkbox:checked) {
-  background-color: #f8f9fa !important;
-  border-left: 4px solid #007bff !important;
-}
-
-/* フォールバック */
-.tags-grid .tag-item.selected {
-  background-color: #f8f9fa !important;
-  border-left: 4px solid #007bff !important;
 }
