@@ -597,28 +597,55 @@ body {
   font-size: 0.85rem;
 }
 
-/* ★★★ フォームのタグ入力部分 ★★★ */
+/* ★★★ 改良されたタグ入力部分のスタイル ★★★ */
+.form-group.tag-input-group {
+  position: relative;
+}
+
 .tag-input-container {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
   background-color: #fff;
-  min-height: 40px;
+  min-height: 50px;
+  align-items: flex-start;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tag-input-container:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.tag-input-wrapper {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
 }
 
 .tag-item {
   display: inline-flex;
   align-items: center;
-  background-color: #007bff;
+  background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+  transition: all 0.2s ease;
+  animation: tagSlideIn 0.3s ease;
+}
+
+.tag-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
 }
 
 .tag-item .remove-tag {
@@ -626,20 +653,22 @@ body {
   border: none;
   color: white;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 1rem;
   font-weight: bold;
   padding: 0;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  line-height: 1;
 }
 
 .tag-item .remove-tag:hover {
-  background-color: rgba(255,255,255,0.3);
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
 .tag-input-field {
@@ -647,9 +676,39 @@ body {
   outline: none;
   background: transparent;
   flex: 1;
-  min-width: 100px;
-  padding: 4px;
-  font-size: 0.9rem;
+  min-width: 120px;
+  padding: 8px 4px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.tag-input-field::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+.add-tag-button {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.add-tag-button:hover {
+  background: linear-gradient(135deg, #20c997, #28a745);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.add-tag-button:active {
+  transform: translateY(0);
 }
 
 .tag-suggestions {
@@ -658,33 +717,73 @@ body {
   left: 0;
   right: 0;
   background-color: white;
-  border: 1px solid #ddd;
+  border: 2px solid #007bff;
   border-top: none;
-  border-radius: 0 0 4px 4px;
-  max-height: 150px;
+  border-radius: 0 0 6px 6px;
+  max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
   display: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .tag-suggestion-item {
-  padding: 8px 12px;
+  padding: 12px 16px;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .tag-suggestion-item:hover {
   background-color: #f8f9fa;
+  padding-left: 20px;
 }
 
 .tag-suggestion-item.active {
-  background-color: #007bff;
+  background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
+  padding-left: 20px;
 }
 
-.form-group.tag-input-group {
-  position: relative;
+.tag-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+/* ヘルプテキストのスタイル */
+.tag-input-help {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+}
+
+.tag-input-help small {
+  color: #6c757d;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.tag-input-help span {
+  margin: 0 4px;
+  color: #999;
+}
+
+.tag-input-help span:first-child {
+  margin-left: 0;
+}
+
+/* アニメーション */
+@keyframes tagSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 /* ★★★ レスポンシブ対応（一括操作バー） ★★★ */
@@ -724,15 +823,72 @@ body {
   }
   
   .tag-input-container {
-    min-height: 50px;
+    padding: 10px;
+    min-height: 60px;
+  }
+  
+  .tag-input-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    min-width: auto;
+  }
+  
+  .tag-input-field {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .add-tag-button {
+    width: 100%;
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .tag-item {
+    font-size: 0.8rem;
+    padding: 5px 8px;
   }
   
   .tag-suggestions {
-    position: fixed;
-    left: 10px;
-    right: 10px;
-    top: auto;
-    max-height: 200px;
+    max-height: 150px;
+  }
+  
+  .tag-suggestion-item {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .tag-input-help {
+    padding: 6px 8px;
+  }
+  
+  .tag-input-help small {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tag-input-container {
+    padding: 8px;
+  }
+  
+  .tag-item {
+    font-size: 0.75rem;
+    padding: 4px 6px;
+    border-radius: 12px;
+  }
+  
+  .tag-item .remove-tag {
+    width: 14px;
+    height: 14px;
+    font-size: 0.9rem;
+  }
+  
+  .add-tag-button {
+    padding: 8px;
+    font-size: 0.8rem;
+    border-radius: 16px;
   }
 }
 
@@ -780,8 +936,9 @@ body {
   background-color: #bbdefb !important;
 }
 
-/* ==================== タグ管理画面専用スタイル ==================== */
+/* ==================== タグ管理画面専用スタイル（整理版） ==================== */
 
+/* タグ追加セクション */
 .tag-add-section {
   background-color: #f8f9fa;
   padding: 20px;
@@ -805,6 +962,7 @@ body {
   font-size: 1rem;
 }
 
+/* 初期タグ一括追加セクション */
 .initial-tags-section {
   text-align: center;
   margin-bottom: 40px;
@@ -843,6 +1001,7 @@ body {
   font-size: 0.9rem;
 }
 
+/* タグ一覧セクション */
 .tags-list-section h2 {
   margin-bottom: 20px;
   color: #333;
@@ -871,15 +1030,17 @@ body {
   min-width: 200px;
 }
 
+/* タググリッド */
 .tags-grid {
-  display: flex; /* gridからflexに変更 */
-  flex-direction: column; /* 縦並び */
-  gap: 0; /* gapを削除 */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin-top: 20px;
 }
 
+/* タグアイテム - 基本スタイル */
 .tags-grid .tag-item {
-  background-color: #fff;
+  background-color: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 20px;
@@ -888,14 +1049,59 @@ body {
   align-items: center;
   transition: all 0.3s ease;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  margin-bottom: 15px; /* カード間の間隔を追加 */
+  margin-bottom: 15px;
+  position: relative;
 }
 
+/* タグアイテム - ホバー状態 */
 .tags-grid .tag-item:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border-color: #999; /* ブルーからグレーに変更 */
+  border-color: #999;
   transform: translateY(-2px);
-  background-color: #f8f9fa; /* ホバー時に薄いグレー */
+  background-color: #f8f9fa;
+}
+
+/* タグアイテム - 選択状態 */
+.tags-grid .tag-item:has(.tag-checkbox:checked) {
+  background-color: #f8f9fa;
+  border-left: 4px solid #007bff;
+  border-color: #007bff;
+}
+
+.tags-grid .tag-item:has(.tag-checkbox:checked):hover {
+  background-color: #e9ecef;
+}
+
+/* CSS :has() 非対応ブラウザ用のフォールバック */
+.tags-grid .tag-item.selected {
+  background-color: #f8f9fa;
+  border-left: 4px solid #007bff;
+  border-color: #007bff;
+}
+
+.tags-grid .tag-item.selected:hover {
+  background-color: #e9ecef;
+}
+
+/* チェックボックス */
+.tag-checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.tag-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #007bff;
+}
+
+/* タグ情報 */
+.tag-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .tag-info h3 {
@@ -906,7 +1112,7 @@ body {
 }
 
 .tag-usage {
-  margin: 0 0 3px 0; /* 間隔を調整 */
+  margin: 0 0 3px 0;
   color: #666;
   font-size: 0.9rem;
 }
@@ -917,6 +1123,7 @@ body {
   font-size: 0.8rem;
 }
 
+/* タグアクション */
 .tag-actions {
   display: flex;
   gap: 8px;
@@ -935,17 +1142,17 @@ body {
 }
 
 .edit-tag-btn {
-  background-color: #6c757d; /* グレー系に変更 */
+  background-color: #6c757d;
   color: white;
 }
 
 .edit-tag-btn:hover {
-  background-color: #5a6268; /* ダークグレー */
+  background-color: #5a6268;
   transform: translateY(-1px);
 }
 
 .delete-tag-btn {
-  background-color: #dc3545; /* 削除は赤のまま */
+  background-color: #dc3545;
   color: white;
 }
 
@@ -954,7 +1161,21 @@ body {
   transform: translateY(-1px);
 }
 
-/* レスポンシブ対応（タグ管理画面） */
+/* 一括操作バー（タグ管理用） */
+#bulkTagActionBar.bulk-action-bar {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  animation: slideInDown 0.3s ease;
+}
+
+/* レスポンシブ対応 */
 @media (max-width: 768px) {
   .tag-add-input-group {
     flex-direction: column;
@@ -986,7 +1207,13 @@ body {
     align-items: stretch;
     gap: 15px;
     padding: 15px;
-    margin-bottom: 10px; /* スマホでは間隔を少し狭く */
+    margin-bottom: 10px;
+  }
+  
+  .tag-checkbox-container {
+    align-self: flex-start;
+    margin-right: 0;
+    margin-bottom: 10px;
   }
   
   .tag-actions {
@@ -997,4 +1224,122 @@ body {
   .delete-tag-btn {
     flex: 1;
   }
+  
+  #bulkTagActionBar.bulk-action-bar {
+    padding: 12px 15px;
+  }
+  
+  #bulkTagActionBar .bulk-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  #bulkTagActionBar .bulk-delete-btn,
+  #bulkTagActionBar .deselect-all-btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  #bulkTagActionBar .selected-count {
+    text-align: center;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tag-add-section {
+    padding: 15px;
+  }
+  
+  .initial-tags-section {
+    padding: 12px;
+  }
+  
+  .tags-grid .tag-item {
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .tag-info h3 {
+    font-size: 1rem;
+  }
+  
+  .tag-usage,
+  .tag-created {
+    font-size: 0.8rem;
+  }
+  
+  .edit-tag-btn,
+  .delete-tag-btn {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ★★★ 緊急修正：タグ管理画面を強制的に白背景にする v2 ★★★ */
+
+/* 全てのタグアイテムを白背景に強制 */
+.tags-grid .tag-item,
+.tags-grid .tag-item *,
+div[data-tag-id],
+div[data-tag-id] * {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+}
+
+/* ホバー時は薄いグレー */
+.tags-grid .tag-item:hover,
+.tags-grid .tag-item:hover * {
+  background-color: #f8f9fa !important;
+  background: #f8f9fa !important;
+}
+
+/* チェックされた状態でも薄いグレー */
+.tags-grid .tag-item:has(.tag-checkbox:checked),
+.tags-grid .tag-item:has(.tag-checkbox:checked) *,
+.tags-grid .tag-item.selected,
+.tags-grid .tag-item.selected * {
+  background-color: #f8f9fa !important;
+  background: #f8f9fa !important;
+}
+
+/* チェックされた状態のホバー */
+.tags-grid .tag-item:has(.tag-checkbox:checked):hover,
+.tags-grid .tag-item:has(.tag-checkbox:checked):hover *,
+.tags-grid .tag-item.selected:hover,
+.tags-grid .tag-item.selected:hover * {
+  background-color: #e9ecef !important;
+  background: #e9ecef !important;
+}
+
+/* 青系の背景色を全て無効化 */
+*[style*="background-color: #e3f2fd"],
+*[style*="background-color: #bbdefb"],
+*[style*="background-color: rgb(227, 242, 253)"],
+*[style*="background-color: rgb(187, 222, 251)"] {
+  background-color: #f8f9fa !important;
+  background: #f8f9fa !important;
+}
+
+/* タグ管理画面内の全要素に適用 */
+.tags-list-section *,
+.tags-grid * {
+  background-color: inherit !important;
+}
+
+.tags-grid .tag-item {
+  background-color: #ffffff !important;
+  border-left: 1px solid #e0e0e0 !important;
+}
+
+.tags-grid .tag-item:has(.tag-checkbox:checked) {
+  background-color: #f8f9fa !important;
+  border-left: 4px solid #007bff !important;
+}
+
+/* フォールバック */
+.tags-grid .tag-item.selected {
+  background-color: #f8f9fa !important;
+  border-left: 4px solid #007bff !important;
 }
