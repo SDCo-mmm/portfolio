@@ -66,6 +66,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   };
 
+  // ★★★ タグ表示HTML生成関数 ★★★
+  const createTagsDisplayHtml = (tags) => {
+    if (!tags || !Array.isArray(tags) || tags.length === 0) {
+      return '';
+    }
+
+    const tagsHtml = tags.map(tag => `<span class="post-detail-tag">${tag}</span>`).join('');
+    
+    return `
+      <div class="post-detail-tags">
+        ${tagsHtml}
+      </div>
+    `;
+  };
+
   // 投稿データを取得
   const fetchPostDetail = async () => {
     postDetailContainer.innerHTML = "<p>作品詳細を読み込み中...</p>";
@@ -91,7 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // ★★★ 投稿詳細を表示する関数（サムネイル対応） ★★★
+  // ★★★ 投稿詳細を表示する関数（タグ表示対応版） ★★★
   const displayPostDetail = (post) => {
     const galleryHtml = post.gallery_images.map(image => {
       // ★★★ 縦長画像の場合はサムネイルを表示、そうでなければオリジナルを表示 ★★★
@@ -113,8 +128,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       `;
     }).join('');
 
+    // ★★★ タグ表示を含む詳細ページHTML ★★★
     postDetailContainer.innerHTML = `
       <div class="post-detail-content">
+        ${createTagsDisplayHtml(post.tags)}
         <h1>${post.title}</h1>
         <div class="client-info">
           ${post.client_logo ? `<img src="${post.client_logo}" alt="${post.client_name} ロゴ" class="client-logo">` : ''}
