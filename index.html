@@ -6,6 +6,7 @@
   <title>STARTEND Design Co. | Portfolio</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=M+PLUS+1p:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/portfolio/css/main.css" />
+  <link rel="stylesheet" href="/portfolio/css/pdf-export.css" />
 </head>
 <body>
   <script>
@@ -27,10 +28,61 @@
           <option value="client">クライアント名順</option>
         </select>
       </div>
+      <!-- PDF出力モードボタン追加 -->
+      <div class="pdf-mode-control">
+        <button id="pdfModeBtn" class="pdf-mode-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          PDF出力モード
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- ★★★ タグフィルター表示エリア（改善版） ★★★ -->
+  <!-- PDF出力用コントロールバー -->
+  <div id="pdfControlBar" class="pdf-control-bar" style="display: none;">
+    <div class="pdf-control-content">
+      <div class="selection-info">
+        <span id="selectedCount">0</span>件選択中
+      </div>
+      <div class="pdf-actions">
+        <button id="exitPdfModeBtn" class="pdf-action-btn exit-mode">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          PDFモードを解除
+        </button>
+        <button id="selectAllBtn" class="pdf-action-btn secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <polyline points="9 11 12 14 22 4"></polyline>
+          </svg>
+          すべてを選択
+        </button>
+        <button id="clearSelectionBtn" class="pdf-action-btn secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          </svg>
+          選択をクリア
+        </button>
+        <button id="generatePdfBtn" class="pdf-action-btn primary" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          PDFを作成
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- タグフィルター表示エリア -->
   <section class="filter-section">
     <div id="tagFilterContainer" class="tag-filter-container">
       <!-- タグフィルターボタンとクリアボタンが動的に生成される -->
@@ -41,6 +93,11 @@
     <div id="postGrid" class="grid-container"></div>
   </main>
 
+  <!-- PDF生成用ライブラリ（サーバーサイド版では不要） -->
+  
+  <!-- 既存のスクリプト -->
   <script src="/portfolio/js/load_posts.js"></script>
+  <!-- PDF出力機能用スクリプト（サーバーサイド版） -->
+  <script src="/portfolio/js/pdf-export-server.js"></script>
 </body>
 </html>
