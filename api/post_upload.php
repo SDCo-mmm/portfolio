@@ -1,5 +1,9 @@
 <?php
-// post_upload.php - 新規投稿の保存と画像アップロード（タグ機能対応版）
+// post_upload.php - 新規投稿の保存と画像アップロード（タグ自動登録対応版）
+
+// エラー出力を抑制してJSONレスポンスを保護
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', 0);
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
@@ -18,6 +22,48 @@ if (!isset($_COOKIE['admin_auth_token']) || $_COOKIE['admin_auth_token'] !== 'au
     http_response_code(401);
     echo json_encode(["status" => "error", "message" => "Authentication required."]);
     exit();
+}
+
+// ★★★ タグ管理機能を追加 ★★★
+function loadTags($tags_file) {
+    if (!file_exists($tags_file)) {
+        return [];
+    }
+    $json_data = file_get_contents($tags_file);
+    $tags = json_decode($json_data, true);
+    return (json_last_error() === JSON_ERROR_NONE && is_array($tags)) ? $tags : [];
+}
+
+function saveTags($tags_file, $tags) {
+    return file_put_contents($tags_file, json_encode($tags, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+}
+
+function addNewTagsToMaster($new_tags, $tags_file) {
+    if (empty($new_tags)) return;
+    
+    $existing_tags = loadTags($tags_file);
+    $existing_tag_names = array_column($existing_tags, 'name');
+    
+    $added_count = 0;
+    foreach ($new_tags as $tag_name) {
+        $tag_name = trim($tag_name);
+        if (!empty($tag_name) && !in_array($tag_name, $existing_tag_names)) {
+            $new_tag = [
+                "id" => uniqid('tag_'),
+                "name" => $tag_name,
+                "created_at" => date('Y-m-d H:i:s'),
+                "usage" => 0
+            ];
+            $existing_tags[] = $new_tag;
+            $existing_tag_names[] = $tag_name;
+            $added_count++;
+        }
+    }
+    
+    if ($added_count > 0) {
+        saveTags($tags_file, $existing_tags);
+        error_log("Added {$added_count} new tags to master list from post creation");
+    }
 }
 
 // ★★★ サムネイル生成関数（既存のコードを維持） ★★★
@@ -252,6 +298,7 @@ function resizeImageWithDualConstraints($source_path, $destination_path, $max_wi
 
 // データファイルのパス
 $posts_file = __DIR__ . '/../data/posts.json';
+$tags_file = __DIR__ . '/../data/tags.json'; // ★追加：タグファイルのパス
 $upload_base_dir = __DIR__ . '/../upload/';
 $client_logo_dir = $upload_base_dir . 'client/';
 $works_images_dir = $upload_base_dir . 'works/';
@@ -370,6 +417,11 @@ if (isset($_FILES['gallery_images'])) {
     }
 }
 
+// ★★★ 新しいタグをマスターリストに自動追加 ★★★
+if (!empty($tags)) {
+    addNewTagsToMaster($tags, $tags_file);
+}
+
 // ★★★ 新しい投稿データを構築（タグ対応） ★★★
 $new_post = [
     "id" => $new_post_id,
@@ -387,6 +439,10 @@ array_unshift($posts, $new_post);
 
 // JSONデータをファイルに書き込む
 if (file_put_contents($posts_file, json_encode($posts, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+    // 出力バッファをクリアしてクリーンなJSONを送信
+    if (ob_get_length()) {
+        ob_clean();
+    }
     echo json_encode([
         "status" => "success", 
         "message" => "投稿が正常に保存されました。", 
@@ -395,8 +451,13 @@ if (file_put_contents($posts_file, json_encode($posts, JSON_PRETTY_PRINT | JSON_
     ]);
 } else {
     http_response_code(500);
+    // 出力バッファをクリアしてクリーンなJSONを送信
+    if (ob_get_length()) {
+        ob_clean();
+    }
     echo json_encode(["status" => "error", "message" => "Failed to save post data to JSON file. Check file permissions."]);
 }
 
+// 余分な出力を防ぐために明示的にexit
 exit();
 ?>
