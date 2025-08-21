@@ -60,6 +60,160 @@ function addNewTagsToMaster($new_tags, $tags_file) {
         }
     }
     
+    if ($added_count > 0) {
+        saveTags($tags_file, $existing_tags);
+        error_log("Added {$added_count} new tags to master list from post update");
+    }
+}
+
+// ★★★ サムネイル生成関数 ★★★
+function generateThumbnail($source_path, $thumbnail_path, $thumb_width = 600, $thumb_height = 450, $quality = 85) {
+    $image_info = getimagesize($source_path);
+    if (!$image_info) {
+        return false;
+    }
+    
+    $original_width = $image_info[0];
+    $original_height = $image_info[1];
+    $mime_type = $image_info['mime'];
+    
+    $source_image = null;
+    switch ($mime_type) {
+        case 'image/jpeg':
+            $source_image = imagecreatefromjpeg($source_path);
+            break;
+        case 'image/png':
+            $source_image = imagecreatefrompng($source_path);
+            break;
+        case 'image/gif':
+            $source_image = imagecreatefromgif($source_path);
+            break;
+        case 'image/webp':
+            if (function_exists('imagecreatefromwebp')) {
+                $source_image = imagecreatefromwebp($source_path);
+            }
+            break;
+    }
+    
+    if (!$source_image) {
+        error_log("Failed to create source image for thumbnail: " . $mime_type);
+        return false;
+    }
+    
+    $thumbnail_image = imagecreatetruecolor($thumb_width, $thumb_height);
+    
+    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
+        imagealphablending($thumbnail_image, false);
+        imagesavealpha($thumbnail_image, true);
+        $transparent = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127);
+        imagefilledrectangle($thumbnail_image, 0, 0, $thumb_width, $thumb_height, $transparent);
+    }
+    
+    $thumb_ratio = $thumb_width / $thumb_height;
+    $original_ratio = $original_width / $original_height;
+    
+    if ($original_ratio > $thumb_ratio) {
+        $crop_height = $original_height;
+        $crop_width = $original_height * $thumb_ratio;
+        $crop_x = ($original_width - $crop_width) / 2;
+        $crop_y = 0;
+    } else {
+        $crop_width = $original_width;
+        $crop_height = $original_width / $thumb_ratio;
+        $crop_x = 0;
+        $crop_y = 0;
+    }
+    
+    $resize_success = imagecopyresampled(
+        $thumbnail_image, $source_image,
+        0, 0,
+        $crop_x, $crop_y,
+        $thumb_width, $thumb_height,
+        $crop_width, $crop_height
+    );
+    
+    if (!$resize_success) {
+        error_log("imagecopyresampled failed for thumbnail");
+        imagedestroy($source_image);
+        imagedestroy($thumbnail_image);
+        return false;
+    }
+    
+    // グラデーション効果
+    $gradient_height = intval($thumb_height * 0.5);
+    $gradient_start_y = $thumb_height - $gradient_height;
+    
+    imagealphablending($thumbnail_image, true);
+    
+    for ($y = $gradient_start_y; $y < $thumb_height; $y++) {
+        $progress = ($y - $gradient_start_y) / $gradient_height;
+        $alpha = intval($progress * 127);
+        $gradient_color = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127 - $alpha);
+        imageline($thumbnail_image, 0, $y, $thumb_width - 1, $y, $gradient_color);
+    }
+    
+    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
+        imagealphablending($thumbnail_image, false);
+        imagesavealpha($thumbnail_image, true);
+    }
+    
+    $result = false;
+    switch ($mime_type) {
+        case 'image/jpeg':
+            $result = imagejpeg($thumbnail_image, $thumbnail_path, $quality);
+            break;
+        case 'image/png':
+            $result = imagepng($thumbnail_image, $thumbnail_path, 9);
+            break;
+        case 'image/gif':
+            $result = imagegif($thumbnail_image, $thumbnail_path);
+            break;
+        case 'image/webp':
+            if (function_exists('imagewebp')) {
+                $result = imagewebp($thumbnail_image, $thumbnail_path, $quality);
+            }
+            break;
+    }
+    
+    imagedestroy($source_image);
+    imagedestroy($thumbnail_image);
+    
+    return $result;
+}
+
+// 縦長画像検出関数
+function isVerticalImage($image_path, $vertical_threshold = 1.5) {
+    $image_info = getimagesize($image_path);
+    if (!$image_info) {
+        return false;
+    }
+    
+    $width = $image_info[0];
+    $height = $image_info[1];
+    $aspect_ratio = $height / $width;
+    
+    return $aspect_ratio >= $vertical_threshold;
+}
+
+// リサイズ関数
+function resizeImageWithDualConstraints($source_path, $destination_path, $max_width = 1000, $max_height = 3000, $quality = 85) {
+    $image_info = getimagesize($source_path);
+    if (!$image_info) {
+        return false;
+    }
+    
+    $original_width = $image_info[0];
+    $original_height = $image_info[1];
+    $mime_type = $image_info['mime'];
+    
+    $needs_resize = false;
+    $new_width = $original_width;
+    $new_height = $original_height;
+    
+    $width_ratio = ($original_width > $max_width) ? ($max_width / $original_width) : 1.0;
+    $height_ratio = ($original_height > $max_height) ? ($max_height / $original_height) : 1.0;
+    $resize_ratio = min($width_ratio, $height_ratio);
+    
     if ($resize_ratio < 1.0) {
         $new_width = intval($original_width * $resize_ratio);
         $new_height = intval($original_height * $resize_ratio);
@@ -135,7 +289,7 @@ function addNewTagsToMaster($new_tags, $tags_file) {
 
 // データファイルのパス
 $posts_file = __DIR__ . '/../data/posts.json';
-$tags_file = __DIR__ . '/../data/tags.json'; // ★追加：タグファイルのパス
+$tags_file = __DIR__ . '/../data/tags.json';
 $upload_base_dir = __DIR__ . '/../upload/';
 $client_logo_dir = $upload_base_dir . 'client/';
 $works_images_dir = $upload_base_dir . 'works/';
@@ -231,7 +385,7 @@ if ($client_logo_removed) {
     $client_logo_path = $existing_client_logo_path;
 }
 
-// ギャラリー画像の処理（既存のロジックを維持）
+// ギャラリー画像の処理
 $new_gallery_images_data = [];
 $existing_gallery_images = $posts[$current_post_index]['gallery_images'] ?? [];
 
@@ -386,54 +540,16 @@ if (isset($_FILES['gallery_images'])) {
 
 // ★★★ 新しいタグをマスターリストに自動追加 ★★★
 if (!empty($tags)) {
-    try {
-        // タグファイルが存在しない場合は作成
-        if (!file_exists($tags_file)) {
-            $dir = dirname($tags_file);
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-            file_put_contents($tags_file, json_encode([], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        }
-        
-        // 既存タグを読み込み
-        $existing_tags = loadTags($tags_file);
-        $existing_tag_names = array_column($existing_tags, 'name');
-        
-        $added_count = 0;
-        foreach ($tags as $tag_name) {
-            $tag_name = trim($tag_name);
-            
-            if (!empty($tag_name) && !in_array($tag_name, $existing_tag_names)) {
-                $new_tag = [
-                    "id" => uniqid('tag_'),
-                    "name" => $tag_name,
-                    "created_at" => date('Y-m-d H:i:s'),
-                    "usage" => 0
-                ];
-                $existing_tags[] = $new_tag;
-                $existing_tag_names[] = $tag_name;
-                $added_count++;
-            }
-        }
-        
-        if ($added_count > 0) {
-            saveTags($tags_file, $existing_tags);
-            error_log("Added {$added_count} new tags to master list from post update");
-        }
-        
-    } catch (Exception $e) {
-        error_log("Error adding tags to master list: " . $e->getMessage());
-    }
+    addNewTagsToMaster($tags, $tags_file);
 }
 
-// ★★★ 投稿データを更新（タグ対応） ★★★
+// ★★★ 投稿データを更新 ★★★
 $posts[$current_post_index]['title'] = $title;
 $posts[$current_post_index]['client_name'] = $client_name;
 $posts[$current_post_index]['description'] = $description;
 $posts[$current_post_index]['client_logo'] = $client_logo_path;
 $posts[$current_post_index]['gallery_images'] = $new_gallery_images_data;
-$posts[$current_post_index]['tags'] = $tags; // ★新規：タグデータを更新
+$posts[$current_post_index]['tags'] = $tags;
 $posts[$current_post_index]['updated_at'] = $updated_at;
 
 // JSONデータをファイルに書き込む
@@ -446,7 +562,7 @@ if (file_put_contents($posts_file, json_encode($posts, JSON_PRETTY_PRINT | JSON_
         "status" => "success", 
         "message" => "投稿が正常に更新されました。", 
         "postId" => $post_id,
-        "tags" => $tags // デバッグ用にタグ情報も返す
+        "tags" => $tags
     ]);
 } else {
     http_response_code(500);
@@ -459,158 +575,4 @@ if (file_put_contents($posts_file, json_encode($posts, JSON_PRETTY_PRINT | JSON_
 
 // 余分な出力を防ぐために明示的にexit
 exit();
-?>added_count > 0) {
-        saveTags($tags_file, $existing_tags);
-        error_log("Added {$added_count} new tags to master list from post update");
-    }
-}
-
-// ★★★ サムネイル生成関数（post_upload.phpと同じ） ★★★
-function generateThumbnail($source_path, $thumbnail_path, $thumb_width = 600, $thumb_height = 450, $quality = 85) {
-    $image_info = getimagesize($source_path);
-    if (!$image_info) {
-        return false;
-    }
-    
-    $original_width = $image_info[0];
-    $original_height = $image_info[1];
-    $mime_type = $image_info['mime'];
-    
-    $source_image = null;
-    switch ($mime_type) {
-        case 'image/jpeg':
-            $source_image = imagecreatefromjpeg($source_path);
-            break;
-        case 'image/png':
-            $source_image = imagecreatefrompng($source_path);
-            break;
-        case 'image/gif':
-            $source_image = imagecreatefromgif($source_path);
-            break;
-        case 'image/webp':
-            if (function_exists('imagecreatefromwebp')) {
-                $source_image = imagecreatefromwebp($source_path);
-            }
-            break;
-    }
-    
-    if (!$source_image) {
-        error_log("Failed to create source image for thumbnail: " . $mime_type);
-        return false;
-    }
-    
-    $thumbnail_image = imagecreatetruecolor($thumb_width, $thumb_height);
-    
-    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
-        imagealphablending($thumbnail_image, false);
-        imagesavealpha($thumbnail_image, true);
-        $transparent = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127);
-        imagefilledrectangle($thumbnail_image, 0, 0, $thumb_width, $thumb_height, $transparent);
-    }
-    
-    $thumb_ratio = $thumb_width / $thumb_height;
-    $original_ratio = $original_width / $original_height;
-    
-    if ($original_ratio > $thumb_ratio) {
-        $crop_height = $original_height;
-        $crop_width = $original_height * $thumb_ratio;
-        $crop_x = ($original_width - $crop_width) / 2;
-        $crop_y = 0;
-    } else {
-        $crop_width = $original_width;
-        $crop_height = $original_width / $thumb_ratio;
-        $crop_x = 0;
-        $crop_y = 0;
-    }
-    
-    $resize_success = imagecopyresampled(
-        $thumbnail_image, $source_image,
-        0, 0,
-        $crop_x, $crop_y,
-        $thumb_width, $thumb_height,
-        $crop_width, $crop_height
-    );
-    
-    if (!$resize_success) {
-        error_log("imagecopyresampled failed for thumbnail");
-        imagedestroy($source_image);
-        imagedestroy($thumbnail_image);
-        return false;
-    }
-    
-    // グラデーション効果
-    $gradient_height = intval($thumb_height * 0.5);
-    $gradient_start_y = $thumb_height - $gradient_height;
-    
-    imagealphablending($thumbnail_image, true);
-    
-    for ($y = $gradient_start_y; $y < $thumb_height; $y++) {
-        $progress = ($y - $gradient_start_y) / $gradient_height;
-        $alpha = intval($progress * 127);
-        $gradient_color = imagecolorallocatealpha($thumbnail_image, 255, 255, 255, 127 - $alpha);
-        imageline($thumbnail_image, 0, $y, $thumb_width - 1, $y, $gradient_color);
-    }
-    
-    if ($mime_type === 'image/png' || $mime_type === 'image/gif' || $mime_type === 'image/webp') {
-        imagealphablending($thumbnail_image, false);
-        imagesavealpha($thumbnail_image, true);
-    }
-    
-    $result = false;
-    switch ($mime_type) {
-        case 'image/jpeg':
-            $result = imagejpeg($thumbnail_image, $thumbnail_path, $quality);
-            break;
-        case 'image/png':
-            $result = imagepng($thumbnail_image, $thumbnail_path, 9);
-            break;
-        case 'image/gif':
-            $result = imagegif($thumbnail_image, $thumbnail_path);
-            break;
-        case 'image/webp':
-            if (function_exists('imagewebp')) {
-                $result = imagewebp($thumbnail_image, $thumbnail_path, $quality);
-            }
-            break;
-    }
-    
-    imagedestroy($source_image);
-    imagedestroy($thumbnail_image);
-    
-    return $result;
-}
-
-// 縦長画像検出関数
-function isVerticalImage($image_path, $vertical_threshold = 1.5) {
-    $image_info = getimagesize($image_path);
-    if (!$image_info) {
-        return false;
-    }
-    
-    $width = $image_info[0];
-    $height = $image_info[1];
-    $aspect_ratio = $height / $width;
-    
-    return $aspect_ratio >= $vertical_threshold;
-}
-
-// リサイズ関数
-function resizeImageWithDualConstraints($source_path, $destination_path, $max_width = 1000, $max_height = 3000, $quality = 85) {
-    $image_info = getimagesize($source_path);
-    if (!$image_info) {
-        return false;
-    }
-    
-    $original_width = $image_info[0];
-    $original_height = $image_info[1];
-    $mime_type = $image_info['mime'];
-    
-    $needs_resize = false;
-    $new_width = $original_width;
-    $new_height = $original_height;
-    
-    $width_ratio = ($original_width > $max_width) ? ($max_width / $original_width) : 1.0;
-    $height_ratio = ($original_height > $max_height) ? ($max_height / $original_height) : 1.0;
-    $resize_ratio = min($width_ratio, $height_ratio);
-    
-    if ($
+?>
